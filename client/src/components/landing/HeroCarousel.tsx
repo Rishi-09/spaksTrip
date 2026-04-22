@@ -42,50 +42,56 @@ export default function HeroCarousel() {
       aria-label="Featured destinations"
       className="relative w-full overflow-hidden bg-black"
     >
-      <div className="relative h-[72vh] min-h-[420px] w-full">
-        {SLIDES.map((slide, i) => (
-          <img
-            key={slide.src}
-            src={slide.src}
-            alt={slide.alt}
-            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
-              i === index ? "opacity-100" : "opacity-0"
-            }`}
-            loading={i === 0 ? "eager" : "lazy"}
-          />
-        ))}
+      <div className="relative h-[72vh] min-h-[420px] w-full overflow-hidden">
+  <div
+    className="flex h-full transition-transform duration-700 ease-in-out"
+    style={{ transform: `translateX(-${index * 100}%)` }}
+  >
+    {SLIDES.map((slide, i) => (
+      <img
+        key={slide.src}
+        src={slide.src}
+        alt={slide.alt}
+        className="h-full w-full flex-shrink-0 object-cover"
+        loading={i === 0 ? "eager" : "lazy"}
+      />
+    ))}
+  </div>
 
-        <button
-          type="button"
-          aria-label="Previous slide"
-          onClick={() => goTo(index - 1)}
-          className="absolute left-6 top-1/2 -translate-y-1/2 grid h-11 w-11 place-items-center rounded-full bg-white/20 text-white backdrop-blur hover:bg-white/30 transition"
-        >
-          <Chevron direction="left" />
-        </button>
-        <button
-          type="button"
-          aria-label="Next slide"
-          onClick={() => goTo(index + 1)}
-          className="absolute right-6 top-1/2 -translate-y-1/2 grid h-11 w-11 place-items-center rounded-full bg-white/20 text-white backdrop-blur hover:bg-white/30 transition"
-        >
-          <Chevron direction="right" />
-        </button>
+  {/* Buttons stay same */}
+  <button
+    type="button"
+    aria-label="Previous slide"
+    onClick={() => goTo(index - 1)}
+    className="absolute left-6 top-1/2 -translate-y-1/2 grid h-11 w-11 place-items-center rounded-full bg-white/20 text-white backdrop-blur hover:bg-white/30 transition"
+  >
+    <Chevron direction="left" />
+  </button>
 
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
-          {SLIDES.map((_, i) => (
-            <button
-              key={i}
-              type="button"
-              aria-label={`Go to slide ${i + 1}`}
-              onClick={() => goTo(i)}
-              className={`h-2 rounded-full transition-all ${
-                i === index ? "w-8 bg-white" : "w-2 bg-white/60"
-              }`}
-            />
-          ))}
-        </div>
-      </div>
+  <button
+    type="button"
+    aria-label="Next slide"
+    onClick={() => goTo(index + 1)}
+    className="absolute right-6 top-1/2 -translate-y-1/2 grid h-11 w-11 place-items-center rounded-full bg-white/20 text-white backdrop-blur hover:bg-white/30 transition"
+  >
+    <Chevron direction="right" />
+  </button>
+
+  {/* Dots stay same */}
+  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+    {SLIDES.map((_, i) => (
+      <button
+        key={i}
+        type="button"
+        aria-label={`Go to slide ${i + 1}`}
+        onClick={() => goTo(i)}
+        className={`h-2 rounded-full transition-all ${
+          i === index ? "w-8 bg-white" : "w-2 bg-white/60"
+        }`}
+      />
+    ))}
+  </div>
+</div>
     </section>
   );
 }

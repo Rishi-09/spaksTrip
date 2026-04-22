@@ -21,28 +21,38 @@ const HOTELS: Hotel[] = [
   { city: "Paris", image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=900&q=80" },
 ];
 
-const PAGE_SIZE = 5;
-
 export default function TopHotelDeals() {
   const [page, setPage] = useState(0);
-  const pageCount = Math.ceil(HOTELS.length / PAGE_SIZE);
-  const start = page * PAGE_SIZE;
-  const visible = HOTELS.slice(start, start + PAGE_SIZE);
+
+  // total slides (move 1 card at a time)
+  const pageCount = HOTELS.length - 1;
 
   return (
     <section className="py-20">
-      <div className="mx-auto max-w-7xl px-6">
+      <div className="w-full px-10">
         <SectionHeading
           title="Top Hotel Deals"
           subtitle="Book hotels worldwide at affordable rates with ease."
         />
 
-        <div className="mt-12 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-5">
-          {visible.map((h) => (
-            <HotelCard key={h.city} hotel={h} />
-          ))}
+        {/* SLIDER */}
+        <div className="mt-12 w-full overflow-hidden">
+          <div
+            className="flex w-full transition-transform duration-700 ease-in-out"
+            style={{ transform: `translateX(-${page * 50}%)` }}
+          >
+            {HOTELS.map((h) => (
+              <div
+                key={h.city}
+                className="w-1/2 flex-shrink-0 flex justify-center px-6"
+              >
+                <HotelCard hotel={h} />
+              </div>
+            ))}
+          </div>
         </div>
 
+        {/* DOTS */}
         <div className="mt-8 flex items-center justify-center gap-2">
           {Array.from({ length: pageCount }).map((_, i) => (
             <button
@@ -65,7 +75,7 @@ function HotelCard({ hotel }: { hotel: Hotel }) {
   return (
     <a
       href="#"
-      className="group relative block h-56 overflow-hidden rounded-xl"
+      className="group relative block h-[460px] w-full  overflow-hidden rounded-xl"
       aria-label={`Explore hotels in ${hotel.city}`}
     >
       <img
@@ -74,12 +84,25 @@ function HotelCard({ hotel }: { hotel: Hotel }) {
         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
         loading="lazy"
       />
+
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-      <span className="absolute bottom-4 left-4 text-lg font-bold text-white drop-shadow">
+
+      <span className="absolute bottom-4 left-4 text-xl font-bold text-white drop-shadow">
         {hotel.city}
       </span>
-      <span className="absolute bottom-4 right-4 grid h-9 w-9 place-items-center rounded-full bg-white text-[#0E1E3A] shadow transition-transform group-hover:translate-x-1">
-        <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+
+      <span className="absolute bottom-4 right-4 grid h-10 w-10 place-items-center rounded-full bg-white text-[#0E1E3A] shadow transition-transform group-hover:translate-x-1">
+        <svg
+          viewBox="0 0 24 24"
+          width={16}
+          height={16}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
           <line x1={5} y1={12} x2={19} y2={12} />
           <polyline points="12 5 19 12 12 19" />
         </svg>
