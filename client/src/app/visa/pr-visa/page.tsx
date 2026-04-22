@@ -1,16 +1,18 @@
-import CabSearchForm from "@/components/transport/CabSearchForm";
-import WhyChooseUsOYO from "@/components/shared/WhyChooseUsOYO";
+import VisaHero from "@/components/visa/VisaHero";
+import PRVisaContent from "@/components/visa/PRVisaContent";
+import VisaFAQ from "@/components/visa/VisaFAQ";
 import BackToTop from "@/components/landing/BackToTop";
 import Footer from "@/components/landing/Footer";
 import Header from "@/components/landing/Header";
 
-export default function CabsPage() {
+export default function PRVisaPage() {
   return (
     <div className="min-h-screen bg-white text-[#0E1E3A]">
       <Header />
       <main>
-        <CabSearchForm />
-        <WhyChooseUsOYO />
+        <VisaHero title="PR Visa" />
+        <PRVisaContent />
+        <VisaFAQ title="PR" />
       </main>
       <Footer />
       <BackToTop />

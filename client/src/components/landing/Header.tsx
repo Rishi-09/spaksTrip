@@ -21,7 +21,7 @@ const NAV_ITEMS: NavItem[] = [
     label: "Accommodation",
     href: "#",
     menu: [
-      { label: "Hotel", href: "#" },
+      { label: "Hotel", href: "/hotel" },
       { label: "Homestay", href: "#" },
       { label: "Airbnb", href: "#" },
       { label: "Villa", href: "#" },
@@ -41,8 +41,22 @@ const NAV_ITEMS: NavItem[] = [
       { label: "Train", href: "#" },
     ],
   },
-  { label: "Visa Consultancy", href: "#" },
-  { label: "Travel Insurance", href: "#" },
+  { label: "Cruise", href: "/cruise" },
+  { label: "Bus", href: "#" },
+  { label: "Events", href: "/events" },
+  {
+    label: "Visa Consultancy",
+    href: "#",
+    menu: [
+      { label: "PR Visa",       href: "/visa/pr-visa" },
+      { label: "Work Visa",     href: "/visa/work-visa" },
+      { label: "Investor Visa", href: "/visa/investor-visa" },
+      { label: "Study Visa",    href: "/visa/study-visa" },
+      { label: "Visit Visa",    href: "/visa/visit-visa" },
+      { label: "Tourist Visa",  href: "#" },
+    ],
+  },
+  { label: "Insurance", href: "/insurance" },
 ];
 
 export default function Header() {
