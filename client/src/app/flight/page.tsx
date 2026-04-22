@@ -1,21 +1,19 @@
+import FlightHero from "@/components/flight/FlightHero";
 import AboutUs from "@/components/landing/AboutUs";
 import BackToTop from "@/components/landing/BackToTop";
 import Destinations from "@/components/landing/Destinations";
-import ExpediaSearch from "@/components/landing/ExpediaSearch";
 import Footer from "@/components/landing/Footer";
 import Header from "@/components/landing/Header";
-import HeroCarousel from "@/components/landing/HeroCarousel";
 import Testimonials from "@/components/landing/Testimonials";
 import TopHotelDeals from "@/components/landing/TopHotelDeals";
 import WhyChooseUs from "@/components/landing/WhyChooseUs";
 
-export default function Home() {
+export default function FlightPage() {
   return (
     <div className="min-h-screen bg-white text-[#0E1E3A]">
       <Header />
       <main>
-        <HeroCarousel />
-        <ExpediaSearch />
+        <FlightHero />
         <Destinations />
         <WhyChooseUs />
         <TopHotelDeals />
