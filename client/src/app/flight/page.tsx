@@ -10,7 +10,7 @@ import WhyChooseUs from "@/components/landing/WhyChooseUs";
 
 export default function FlightPage() {
   return (
-    <div className="min-h-screen bg-white text-[#0E1E3A]">
+    <div className="min-h-screen bg-surface text-ink">
       <Header />
       <main>
         <FlightHero />
