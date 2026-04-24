@@ -65,12 +65,17 @@ const NAV_ITEMS: NavItem[] = [
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
+
+  const toggleMobileSection = (label: string) => {
+    setMobileExpanded((current) => (current === label ? null : label));
+  };
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white shadow-[var(--shadow-xs)]">
       {/* Top utility bar */}
       <div className="bg-brand-900 text-white text-[13px]">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-2.5">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2.5 sm:px-6">
           <a
             href="tel:+919220328072"
             className="flex items-center gap-2 text-white/85 hover:text-white transition-colors"
@@ -90,7 +95,7 @@ export default function Header() {
 
       {/* Main nav */}
       <div className="border-b border-border-soft">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3.5">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6">
           <Logo />
           <nav className="hidden lg:block">
             <ul className="flex items-center gap-7 text-[14px] font-semibold text-ink">
@@ -126,7 +131,13 @@ export default function Header() {
           <button
             type="button"
             aria-label="Toggle menu"
-            onClick={() => setMobileOpen((v) => !v)}
+            onClick={() => {
+              setMobileOpen((v) => {
+                const next = !v;
+                if (!next) setMobileExpanded(null);
+                return next;
+              });
+            }}
             className="lg:hidden grid h-10 w-10 place-items-center rounded-md text-ink hover:bg-surface-muted"
           >
             <svg viewBox="0 0 24 24" width={20} height={20} fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" aria-hidden>
@@ -152,21 +163,55 @@ export default function Header() {
           <ul className="flex flex-col py-2">
             {NAV_ITEMS.map((item) => (
               <li key={item.label}>
-                <Link
-                  href={item.href}
-                  className="block px-6 py-3 text-[14px] font-semibold text-ink border-b border-border-soft/60 hover:bg-surface-muted"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  {item.label}
-                </Link>
                 {item.menu ? (
+                  <div className="flex items-center justify-between border-b border-border-soft/60 px-4 py-3 sm:px-6">
+                    <span className="text-[14px] font-semibold text-ink">{item.label}</span>
+                    <button
+                      type="button"
+                      aria-label={`Toggle ${item.label} menu`}
+                      aria-expanded={mobileExpanded === item.label}
+                      onClick={() => toggleMobileSection(item.label)}
+                      className="grid h-8 w-8 place-items-center rounded-md text-ink hover:bg-surface-muted"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        width={16}
+                        height={16}
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2.2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden
+                        className={cn(
+                          "transition-transform",
+                          mobileExpanded === item.label && "rotate-180",
+                        )}
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  <Link
+                    href={item.href}
+                    className="block border-b border-border-soft/60 px-4 py-3 text-[14px] font-semibold text-ink hover:bg-surface-muted sm:px-6"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                )}
+                {item.menu && mobileExpanded === item.label ? (
                   <ul className="bg-surface-muted">
                     {item.menu.map((m) => (
                       <li key={m.label}>
                         <Link
                           href={m.href}
-                          className="block px-10 py-2.5 text-[13px] text-ink-soft hover:text-brand-700"
-                          onClick={() => setMobileOpen(false)}
+                          className="block px-8 py-2.5 text-[13px] text-ink-soft hover:text-brand-700 sm:px-10"
+                          onClick={() => {
+                            setMobileOpen(false);
+                            setMobileExpanded(null);
+                          }}
                         >
                           {m.label}
                         </Link>

@@ -1,72 +1,97 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import Chip from "@/components/ui/Chip";
+import { useToast } from "@/components/ui/Toast";
+import { toIsoDate } from "@/lib/format";
+
+type TripMode = "oneway" | "round";
+
 export default function CabSearchForm() {
+  const router = useRouter();
+  const toast = useToast();
+
+  const [mode, setMode] = useState<TripMode>("oneway");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [date, setDate] = useState(toIsoDate(new Date()));
+  const [returnDate, setReturnDate] = useState("");
+  const [time, setTime] = useState("10:00");
+  const [submitting, setSubmitting] = useState(false);
+
+  const onSearch = () => {
+    if (!from.trim()) { toast.push({ title: "Enter pickup location", tone: "warn" }); return; }
+    if (!to.trim()) { toast.push({ title: "Enter drop location", tone: "warn" }); return; }
+    if (!date) { toast.push({ title: "Pick a date", tone: "warn" }); return; }
+    setSubmitting(true);
+    const params = new URLSearchParams({ from: from.trim(), to: to.trim(), date, time, mode });
+    if (mode === "round" && returnDate) params.set("return", returnDate);
+    router.push(`/cabs/results?${params.toString()}`);
+  };
+
   return (
-    <div className="bg-[#E8682A] px-6 py-6">
-      <form
-        onSubmit={(e) => e.preventDefault()}
-        className="mx-auto flex max-w-7xl flex-col gap-4 rounded-xl bg-white px-6 py-5 shadow-md md:flex-row md:items-end md:gap-0"
-      >
-        <Field label="From" className="md:flex-1 md:border-r md:border-zinc-200">
-          <input
-            type="text"
-            aria-label="Pickup location"
-            placeholder="-- Select Pickup --"
-            className="w-full bg-transparent text-base font-semibold text-zinc-700 placeholder:text-zinc-500 outline-none"
-          />
-        </Field>
-
-        <Field label="To" className="md:flex-1 md:border-r md:border-zinc-200">
-          <input
-            type="text"
-            aria-label="Drop location"
-            placeholder="-- Select Drop --"
-            className="w-full bg-transparent text-base font-semibold text-zinc-700 placeholder:text-zinc-500 outline-none"
-          />
-        </Field>
-
-        <Field label="Departure" className="md:flex-1 md:border-r md:border-zinc-200">
-          <input
-            type="date"
-            aria-label="Departure date"
-            className="w-full bg-transparent text-base font-semibold text-zinc-700 outline-none"
-          />
-        </Field>
-
-        <Field label="Pickup Time" className="md:flex-1">
-          <input
-            type="time"
-            aria-label="Pickup time"
-            className="w-full bg-transparent text-base font-semibold text-zinc-700 outline-none"
-          />
-        </Field>
-
-        <div className="md:ml-4 md:shrink-0">
-          <button
-            type="submit"
-            className="h-full w-full rounded-md bg-[#B5383A] px-10 py-4 text-base font-bold text-white hover:bg-[#9d2f31] transition-colors md:w-auto"
-          >
-            Search
-          </button>
+    <div className="bg-accent-500 px-6 py-8">
+      <div className="mx-auto max-w-7xl">
+        <h1 className="text-2xl font-extrabold text-white mb-5 tracking-tight">Book a Cab</h1>
+        <div className="rounded-2xl bg-white p-5 shadow-(--shadow-lg)">
+          <div className="flex gap-2 mb-4">
+            <Chip active={mode === "oneway"} onClick={() => setMode("oneway")}>One Way</Chip>
+            <Chip active={mode === "round"} onClick={() => setMode("round")}>Round Trip</Chip>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_auto]">
+            <Input
+              label="From (Pickup)"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+              placeholder="City or area"
+              leading={
+                <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden className="text-ink-muted">
+                  <circle cx="12" cy="10" r="3" /><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 14 8 14s8-8.75 8-14a8 8 0 0 0-8-8z" />
+                </svg>
+              }
+            />
+            <Input
+              label="To (Drop)"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              placeholder="City or area"
+              leading={
+                <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden className="text-ink-muted">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+                </svg>
+              }
+            />
+            <Input
+              label={mode === "round" ? "Departure Date" : "Date"}
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
+            {mode === "round" && (
+              <Input
+                label="Return Date"
+                type="date"
+                value={returnDate}
+                onChange={(e) => setReturnDate(e.target.value)}
+              />
+            )}
+            <Input
+              label="Pickup Time"
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+            />
+            <div className="flex items-end sm:col-span-2 lg:col-span-1">
+              <Button onClick={onSearch} loading={submitting} size="xl" variant="accent" fullWidth>
+                Search Cabs
+              </Button>
+            </div>
+          </div>
         </div>
-      </form>
-    </div>
-  );
-}
-
-function Field({
-  label,
-  children,
-  className = "",
-}: {
-  label: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={`flex flex-col gap-1 px-4 py-1 ${className}`}>
-      <span className="text-xs font-medium text-zinc-500">{label}</span>
-      {children}
+      </div>
     </div>
   );
 }

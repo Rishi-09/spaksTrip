@@ -1,0 +1,130 @@
+"use client";
+
+import Link from "next/link";
+import type { Hotel } from "@/lib/mock/hotels";
+import { formatINR } from "@/lib/format";
+import Badge from "@/components/ui/Badge";
+
+const AMENITY_LABELS: Record<string, string> = {
+  wifi: "Free WiFi", pool: "Pool", gym: "Gym", spa: "Spa",
+  restaurant: "Restaurant", bar: "Bar", parking: "Parking",
+  ac: "AC", breakfast: "Breakfast", pet_friendly: "Pet Friendly",
+  business_center: "Business Center", airport_shuttle: "Airport Shuttle",
+  beach_access: "Beach Access", rooftop: "Rooftop",
+};
+
+function StarRating({ stars }: { stars: number }) {
+  return (
+    <div className="flex items-center gap-0.5" aria-label={`${stars} star hotel`}>
+      {Array.from({ length: 5 }, (_, i) => (
+        <svg
+          key={i}
+          viewBox="0 0 24 24"
+          width={12}
+          height={12}
+          fill={i < stars ? "currentColor" : "none"}
+          stroke="currentColor"
+          strokeWidth={1.5}
+          className={i < stars ? "text-warn-500" : "text-border"}
+          aria-hidden
+        >
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+        </svg>
+      ))}
+    </div>
+  );
+}
+
+type Props = {
+  hotel: Hotel;
+  checkIn: string;
+  checkOut: string;
+  rooms: number;
+  adults: number;
+  children: number;
+  nights: number;
+};
+
+export default function HotelResultCard({ hotel, checkIn, checkOut, rooms, adults, children, nights }: Props) {
+  const href = `/hotel/${hotel.id}?checkIn=${checkIn}&checkOut=${checkOut}&rooms=${rooms}&adults=${adults}&children=${children}`;
+
+  return (
+    <article className="flex flex-col sm:flex-row overflow-hidden rounded-xl bg-white border border-border-soft shadow-(--shadow-xs) hover:shadow-(--shadow-sm) transition-shadow">
+      <div className="relative h-48 sm:h-auto sm:w-52 shrink-0 overflow-hidden">
+        <img
+          src={hotel.images[0]}
+          alt={hotel.name}
+          className="h-full w-full object-cover"
+          loading="lazy"
+        />
+        <span className="absolute top-2 left-2 rounded-full bg-brand-900/80 px-2 py-0.5 text-[11px] font-semibold text-white">
+          {hotel.propertyType.charAt(0).toUpperCase() + hotel.propertyType.slice(1)}
+        </span>
+      </div>
+
+      <div className="flex flex-1 flex-col justify-between gap-3 p-4">
+        <div className="flex flex-col gap-1.5">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <h3 className="text-[16px] font-bold text-ink leading-snug">{hotel.name}</h3>
+              {hotel.chain && <p className="text-[12px] text-ink-muted">{hotel.chain}</p>}
+            </div>
+            <div className="flex flex-col items-end gap-1">
+              <div className="flex items-center gap-1.5">
+                <span className="rounded bg-brand-700 px-1.5 py-0.5 text-[12px] font-bold text-white">
+                  {hotel.reviewScore.toFixed(1)}
+                </span>
+                <span className="text-[12px] font-semibold text-ink">{hotel.reviewLabel}</span>
+                <span className="text-[11px] text-ink-muted">({hotel.reviewCount.toLocaleString()})</span>
+              </div>
+              <StarRating stars={hotel.starRating} />
+            </div>
+          </div>
+
+          <p className="text-[12px] text-ink-muted flex items-center gap-1">
+            <svg viewBox="0 0 24 24" width={12} height={12} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            {hotel.address}
+          </p>
+
+          <div className="flex flex-wrap gap-1.5 mt-1">
+            {hotel.amenities.slice(0, 4).map((a) => (
+              <Badge key={a} tone="neutral" size="sm">
+                {AMENITY_LABELS[a] ?? a}
+              </Badge>
+            ))}
+            {hotel.amenities.length > 4 && (
+              <Badge tone="neutral" size="sm">+{hotel.amenities.length - 4} more</Badge>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-end justify-between gap-3 pt-2 border-t border-border-soft">
+          <div>
+            <p className="text-[11px] text-ink-muted">
+              {nights} night{nights !== 1 ? "s" : ""} · {rooms} room{rooms !== 1 ? "s" : ""}
+            </p>
+            <p className="text-[22px] font-extrabold text-ink leading-tight">
+              {formatINR(hotel.lowestPrice)}
+              <span className="text-[13px] font-medium text-ink-muted"> /night</span>
+            </p>
+            <p className="text-[11px] text-ink-muted">
+              Total {formatINR(hotel.lowestPrice * nights * rooms)} + taxes
+            </p>
+          </div>
+          <Link
+            href={href}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-accent-500 px-5 py-2.5 text-[14px] font-bold text-white hover:bg-accent-600 transition-colors"
+          >
+            View Rooms
+            <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </Link>
+        </div>
+      </div>
+    </article>
+  );
+}
