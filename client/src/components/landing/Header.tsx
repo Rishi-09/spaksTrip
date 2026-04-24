@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 import Logo from "./Logo";
+import { cn } from "@/lib/cn";
 
 type NavItem = {
   label: string;
@@ -48,66 +52,133 @@ const NAV_ITEMS: NavItem[] = [
     label: "Visa Consultancy",
     href: "#",
     menu: [
-      { label: "PR Visa",       href: "/visa/pr-visa" },
-      { label: "Work Visa",     href: "/visa/work-visa" },
+      { label: "PR Visa", href: "/visa/pr-visa" },
+      { label: "Work Visa", href: "/visa/work-visa" },
       { label: "Investor Visa", href: "/visa/investor-visa" },
-      { label: "Study Visa",    href: "/visa/study-visa" },
-      { label: "Visit Visa",    href: "/visa/visit-visa" },
-      { label: "Tourist Visa",  href: "#" },
+      { label: "Study Visa", href: "/visa/study-visa" },
+      { label: "Visit Visa", href: "/visa/visit-visa" },
+      { label: "Tourist Visa", href: "#" },
     ],
   },
   { label: "Insurance", href: "/insurance" },
 ];
 
 export default function Header() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   return (
-    <header className="sticky top-0 z-50 w-full bg-white">
-      <div className="bg-[#102132] text-white text-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
+    <header className="sticky top-0 z-40 w-full bg-white shadow-[var(--shadow-xs)]">
+      {/* Top utility bar */}
+      <div className="bg-brand-900 text-white text-[13px]">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-2.5">
           <a
             href="tel:+919220328072"
-            className="flex items-center gap-2 text-white/90 hover:text-white"
+            className="flex items-center gap-2 text-white/85 hover:text-white transition-colors"
           >
-            <svg
-              viewBox="0 0 24 24"
-              width={16}
-              height={16}
-              aria-hidden="true"
-              fill="currentColor"
-            >
+            <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" aria-hidden>
               <path d="M6.6 10.8c1.5 2.9 3.7 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.4.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.5 21 3 13.5 3 4.5c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1l-2.3 1.7z" />
             </svg>
-            Support No. +91 922 032 8072
+            +91 922 032 8072
           </a>
-          <div className="flex items-center gap-3">
-            <LoginPill color="#E0742E" label="Customer Login" href="#" />
-            <LoginPill color="#3CC4D0" label="Patner Login" href="/partner-login" />
-            <LoginPill color="#2C7BD9" label="Agent Login" href="#" />
+          <div className="hidden sm:flex items-center gap-2">
+            <LoginPill tone="accent" label="Customer Login" href="#" />
+            <LoginPill tone="info" label="Partner Login" href="/partner-login" />
+            <LoginPill tone="brand" label="Agent Login" href="#" />
           </div>
         </div>
       </div>
 
-      <div className="border-b border-zinc-100">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+      {/* Main nav */}
+      <div className="border-b border-border-soft">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3.5">
           <Logo />
           <nav className="hidden lg:block">
-            <ul className="flex items-center gap-8 text-[15px] font-semibold text-[#0E1E3A]">
+            <ul className="flex items-center gap-7 text-[14px] font-semibold text-ink">
               {NAV_ITEMS.map((item) => (
                 <li key={item.label} className="group/nav relative">
                   <Link
                     href={item.href}
-                    className="inline-flex items-center gap-1 transition-colors group-hover/nav:text-[#E0382E]"
+                    className="inline-flex items-center gap-1 py-2 transition-colors group-hover/nav:text-brand-700"
                   >
                     {item.label}
-                    {item.menu ? <span aria-hidden="true">+</span> : null}
+                    {item.menu ? (
+                      <svg
+                        viewBox="0 0 24 24"
+                        width={14}
+                        height={14}
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2.2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden
+                        className="transition-transform group-hover/nav:rotate-180"
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    ) : null}
                   </Link>
                   {item.menu ? <DropdownMenu items={item.menu} /> : null}
                 </li>
               ))}
             </ul>
           </nav>
+          <button
+            type="button"
+            aria-label="Toggle menu"
+            onClick={() => setMobileOpen((v) => !v)}
+            className="lg:hidden grid h-10 w-10 place-items-center rounded-md text-ink hover:bg-surface-muted"
+          >
+            <svg viewBox="0 0 24 24" width={20} height={20} fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" aria-hidden>
+              {mobileOpen ? (
+                <>
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </>
+              ) : (
+                <>
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
+                </>
+              )}
+            </svg>
+          </button>
         </div>
       </div>
+
+      {mobileOpen && (
+        <nav className="lg:hidden border-b border-border-soft bg-white max-h-[70vh] overflow-y-auto scrollbar-thin">
+          <ul className="flex flex-col py-2">
+            {NAV_ITEMS.map((item) => (
+              <li key={item.label}>
+                <Link
+                  href={item.href}
+                  className="block px-6 py-3 text-[14px] font-semibold text-ink border-b border-border-soft/60 hover:bg-surface-muted"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  {item.label}
+                </Link>
+                {item.menu ? (
+                  <ul className="bg-surface-muted">
+                    {item.menu.map((m) => (
+                      <li key={m.label}>
+                        <Link
+                          href={m.href}
+                          className="block px-10 py-2.5 text-[13px] text-ink-soft hover:text-brand-700"
+                          onClick={() => setMobileOpen(false)}
+                        >
+                          {m.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
     </header>
   );
 }
@@ -116,30 +187,27 @@ function DropdownMenu({ items }: { items: { label: string; href: string }[] }) {
   return (
     <div
       role="menu"
-      className="invisible absolute left-1/2 top-full z-50 mt-3 min-w-60 -translate-x-1/2 translate-y-1 rounded-md bg-[#1F86C7] py-2 opacity-0 shadow-xl transition-all duration-150 group-hover/nav:visible group-hover/nav:translate-y-0 group-hover/nav:opacity-100"
+      className="invisible absolute left-1/2 top-full z-50 mt-1 min-w-56 -translate-x-1/2 translate-y-1 rounded-lg bg-white border border-border-soft opacity-0 shadow-[var(--shadow-pop)] transition-all duration-150 group-hover/nav:visible group-hover/nav:translate-y-0 group-hover/nav:opacity-100"
     >
-      <span
-        aria-hidden="true"
-        className="absolute -top-2 left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 bg-[#1F86C7]"
-      />
-      <ul className="relative flex flex-col">
+      <ul className="py-2">
         {items.map((m) => (
           <li key={m.label}>
             <Link
               href={m.href}
               role="menuitem"
-              className="flex items-center gap-2 px-5 py-2.5 text-[15px] font-medium text-white/95 hover:bg-white/10 hover:text-white"
+              className="flex items-center gap-2 px-4 py-2.5 text-[14px] font-medium text-ink hover:bg-brand-50 hover:text-brand-700"
             >
               <svg
                 viewBox="0 0 24 24"
-                width={14}
-                height={14}
+                width={12}
+                height={12}
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={2.4}
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                aria-hidden="true"
+                aria-hidden
+                className="text-brand-500"
               >
                 <polyline points="9 6 15 12 9 18" />
               </svg>
@@ -152,20 +220,26 @@ function DropdownMenu({ items }: { items: { label: string; href: string }[] }) {
   );
 }
 
-function LoginPill({ color, label, href }: { color: string; label: string; href: string }) {
+function LoginPill({
+  tone,
+  label,
+  href,
+}: {
+  tone: "brand" | "accent" | "info";
+  label: string;
+  href: string;
+}) {
   return (
     <Link
       href={href}
-      className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-white text-sm font-medium shadow-sm hover:opacity-90"
-      style={{ backgroundColor: color }}
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-white text-[12px] font-semibold shadow-sm transition-opacity hover:opacity-90",
+        tone === "brand" && "bg-brand-600",
+        tone === "accent" && "bg-accent-500",
+        tone === "info" && "bg-info-500",
+      )}
     >
-      <svg
-        viewBox="0 0 24 24"
-        width={16}
-        height={16}
-        aria-hidden="true"
-        fill="currentColor"
-      >
+      <svg viewBox="0 0 24 24" width={14} height={14} aria-hidden fill="currentColor">
         <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-3.3 0-8 1.7-8 5v2h16v-2c0-3.3-4.7-5-8-5Z" />
       </svg>
       {label}
