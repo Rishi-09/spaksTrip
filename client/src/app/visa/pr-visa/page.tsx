@@ -1,5 +1,6 @@
 import VisaHero from "@/components/visa/VisaHero";
 import PRVisaContent from "@/components/visa/PRVisaContent";
+import DocumentChecklist from "@/components/visa/DocumentChecklist";
 import VisaFAQ from "@/components/visa/VisaFAQ";
 import BackToTop from "@/components/landing/BackToTop";
 import Footer from "@/components/landing/Footer";
@@ -11,6 +12,7 @@ export default function PRVisaPage() {
       <Header />
       <main>
         <VisaHero title="PR Visa" />
+        <DocumentChecklist type="pr-visa" />
         <PRVisaContent />
         <VisaFAQ title="PR" />
       </main>

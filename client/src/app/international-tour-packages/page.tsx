@@ -1,7 +1,6 @@
 import PackagePageHero from "@/components/holiday-packages/PackagePageHero";
-import TourPackageCard, {
-  type TourPackage,
-} from "@/components/holiday-packages/TourPackageCard";
+import PackageFilteredGrid from "@/components/holiday-packages/PackageFilteredGrid";
+import type { TourPackage } from "@/components/holiday-packages/TourPackageCard";
 import BackToTop from "@/components/landing/BackToTop";
 import Footer from "@/components/landing/Footer";
 import Header from "@/components/landing/Header";
@@ -74,11 +73,7 @@ export default function InternationalTourPackagesPage() {
           image="/forest.jpg"
         />
         <section className="mx-auto max-w-7xl px-6 py-16">
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {PACKAGES.map((p) => (
-              <TourPackageCard key={p.title} pkg={p} />
-            ))}
-          </div>
+          <PackageFilteredGrid packages={PACKAGES} />
         </section>
       </main>
       <Footer />

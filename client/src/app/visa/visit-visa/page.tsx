@@ -1,5 +1,6 @@
 import VisaHero from "@/components/visa/VisaHero";
 import VisitVisaContent from "@/components/visa/VisitVisaContent";
+import DocumentChecklist from "@/components/visa/DocumentChecklist";
 import VisaFAQ from "@/components/visa/VisaFAQ";
 import BackToTop from "@/components/landing/BackToTop";
 import Footer from "@/components/landing/Footer";
@@ -11,6 +12,7 @@ export default function VisitVisaPage() {
       <Header />
       <main>
         <VisaHero title="Visit Visa" />
+        <DocumentChecklist type="visit-visa" />
         <VisitVisaContent />
         <VisaFAQ title="PR" />
       </main>

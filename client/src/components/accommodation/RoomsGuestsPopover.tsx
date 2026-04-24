@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Popover from "@/components/ui/Popover";
 
 type Props = {
@@ -64,20 +63,19 @@ function Counter({
 }
 
 export default function RoomsGuestsPopover({ rooms, adults, children, onRoomsChange, onAdultsChange, onChildrenChange }: Props) {
-  const [open, setOpen] = useState(false);
-
   const summary = `${rooms} Room${rooms > 1 ? "s" : ""} · ${adults + children} Guest${adults + children !== 1 ? "s" : ""}`;
 
   return (
     <div className="flex flex-col gap-1">
       <span className="text-[12px] font-medium text-ink-muted">Rooms & Guests</span>
       <Popover
-        open={open}
-        onOpenChange={setOpen}
-        trigger={
+        placement="bottom-start"
+        trigger={({ open, toggle, ref }) => (
           <button
+            ref={ref}
             type="button"
-            onClick={() => setOpen(!open)}
+            onClick={toggle}
+            aria-expanded={open}
             className="flex h-11 w-full items-center gap-2 rounded-lg border border-border bg-white px-3 text-left text-[14px] font-semibold text-ink hover:border-brand-500 transition-colors"
           >
             <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden className="text-ink-muted">
@@ -88,23 +86,24 @@ export default function RoomsGuestsPopover({ rooms, adults, children, onRoomsCha
             </svg>
             {summary}
           </button>
-        }
-        position="bottom-start"
+        )}
       >
-        <div className="w-72 p-4">
-          <div className="divide-y divide-border-soft">
-            <Counter label="Rooms" value={rooms} min={1} max={8} onChange={onRoomsChange} />
-            <Counter label="Adults" sub="Age 18+" value={adults} min={1} max={16} onChange={onAdultsChange} />
-            <Counter label="Children" sub="Age 0–17" value={children} min={0} max={8} onChange={onChildrenChange} />
+        {({ close }) => (
+          <div className="w-72 p-4">
+            <div className="divide-y divide-border-soft">
+              <Counter label="Rooms" value={rooms} min={1} max={8} onChange={onRoomsChange} />
+              <Counter label="Adults" sub="Age 18+" value={adults} min={1} max={16} onChange={onAdultsChange} />
+              <Counter label="Children" sub="Age 0–17" value={children} min={0} max={8} onChange={onChildrenChange} />
+            </div>
+            <button
+              type="button"
+              onClick={close}
+              className="mt-3 w-full rounded-lg bg-brand-600 py-2 text-[13px] font-semibold text-white hover:bg-brand-700 transition-colors"
+            >
+              Done
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="mt-3 w-full rounded-lg bg-brand-600 py-2 text-[13px] font-semibold text-white hover:bg-brand-700 transition-colors"
-          >
-            Done
-          </button>
-        </div>
+        )}
       </Popover>
     </div>
   );

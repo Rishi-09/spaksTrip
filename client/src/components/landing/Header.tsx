@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useState } from "react";
 import Logo from "./Logo";
 import { cn } from "@/lib/cn";
+import AuthModal from "@/components/auth/AuthModal";
+import { useAuthStore } from "@/state/authStore";
 
 type NavItem = {
   label: string;
@@ -61,18 +63,23 @@ const NAV_ITEMS: NavItem[] = [
     ],
   },
   { label: "Insurance", href: "/insurance" },
+  { label: "Offers", href: "/offers" },
 ];
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authTab, setAuthTab] = useState<"customer" | "agent">("customer");
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
 
   const toggleMobileSection = (label: string) => {
     setMobileExpanded((current) => (current === label ? null : label));
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-white shadow-[var(--shadow-xs)]">
+    <header className="sticky top-0 z-40 w-full bg-white shadow-(--shadow-xs)">
       {/* Top utility bar */}
       <div className="bg-brand-900 text-white text-[13px]">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2.5 sm:px-6">
@@ -86,9 +93,24 @@ export default function Header() {
             +91 922 032 8072
           </a>
           <div className="hidden sm:flex items-center gap-2">
-            <LoginPill tone="accent" label="Customer Login" href="#" />
-            <LoginPill tone="info" label="Partner Login" href="/partner-login" />
-            <LoginPill tone="brand" label="Agent Login" href="#" />
+            {user ? (
+              <>
+                <Link href="/my-trips" className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-white/85 hover:text-white text-[12px] font-semibold transition-colors">
+                  My Trips
+                </Link>
+                <span className="text-white/50">·</span>
+                <span className="text-[12px] text-white/85">{user.name}</span>
+                <button type="button" onClick={logout} className="inline-flex items-center gap-1.5 rounded-full border border-white/30 px-3 py-1.5 text-white/85 hover:text-white text-[12px] font-semibold transition-colors">
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <LoginPill tone="accent" label="Customer Login" onClick={() => { setAuthTab("customer"); setAuthOpen(true); }} />
+                <LoginPill tone="info" label="Partner Login" href="/partner-login" />
+                <LoginPill tone="brand" label="Agent Login" onClick={() => { setAuthTab("agent"); setAuthOpen(true); }} />
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -157,6 +179,8 @@ export default function Header() {
           </button>
         </div>
       </div>
+
+      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} defaultTab={authTab} />
 
       {mobileOpen && (
         <nav className="lg:hidden border-b border-border-soft bg-white max-h-[70vh] overflow-y-auto scrollbar-thin">
@@ -232,7 +256,7 @@ function DropdownMenu({ items }: { items: { label: string; href: string }[] }) {
   return (
     <div
       role="menu"
-      className="invisible absolute left-1/2 top-full z-50 mt-1 min-w-56 -translate-x-1/2 translate-y-1 rounded-lg bg-white border border-border-soft opacity-0 shadow-[var(--shadow-pop)] transition-all duration-150 group-hover/nav:visible group-hover/nav:translate-y-0 group-hover/nav:opacity-100"
+      className="invisible absolute left-1/2 top-full z-50 mt-1 min-w-56 -translate-x-1/2 translate-y-1 rounded-lg bg-white border border-border-soft opacity-0 shadow-(--shadow-pop) transition-all duration-150 group-hover/nav:visible group-hover/nav:translate-y-0 group-hover/nav:opacity-100"
     >
       <ul className="py-2">
         {items.map((m) => (
@@ -269,25 +293,26 @@ function LoginPill({
   tone,
   label,
   href,
+  onClick,
 }: {
   tone: "brand" | "accent" | "info";
   label: string;
-  href: string;
+  href?: string;
+  onClick?: () => void;
 }) {
-  return (
-    <Link
-      href={href}
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-white text-[12px] font-semibold shadow-sm transition-opacity hover:opacity-90",
-        tone === "brand" && "bg-brand-600",
-        tone === "accent" && "bg-accent-500",
-        tone === "info" && "bg-info-500",
-      )}
-    >
-      <svg viewBox="0 0 24 24" width={14} height={14} aria-hidden fill="currentColor">
-        <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-3.3 0-8 1.7-8 5v2h16v-2c0-3.3-4.7-5-8-5Z" />
-      </svg>
-      {label}
-    </Link>
+  const cls = cn(
+    "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-white text-[12px] font-semibold shadow-sm transition-opacity hover:opacity-90",
+    tone === "brand" && "bg-brand-600",
+    tone === "accent" && "bg-accent-500",
+    tone === "info" && "bg-info-500",
   );
+  const icon = (
+    <svg viewBox="0 0 24 24" width={14} height={14} aria-hidden fill="currentColor">
+      <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-3.3 0-8 1.7-8 5v2h16v-2c0-3.3-4.7-5-8-5Z" />
+    </svg>
+  );
+  if (onClick) {
+    return <button type="button" onClick={onClick} className={cls}>{icon}{label}</button>;
+  }
+  return <Link href={href ?? "#"} className={cls}>{icon}{label}</Link>;
 }

@@ -1,5 +1,6 @@
 import VisaHero from "@/components/visa/VisaHero";
 import StudyVisaContent from "@/components/visa/StudyVisaContent";
+import DocumentChecklist from "@/components/visa/DocumentChecklist";
 import VisaFAQ from "@/components/visa/VisaFAQ";
 import BackToTop from "@/components/landing/BackToTop";
 import Footer from "@/components/landing/Footer";
@@ -11,6 +12,7 @@ export default function StudyVisaPage() {
       <Header />
       <main>
         <VisaHero title="Study Visa" />
+        <DocumentChecklist type="study-visa" />
         <StudyVisaContent />
         <VisaFAQ title="PR" />
       </main>

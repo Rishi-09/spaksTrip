@@ -2,7 +2,7 @@
 
 import Checkbox from "@/components/ui/Checkbox";
 import Chip from "@/components/ui/Chip";
-import { RangeSlider } from "@/components/ui/Slider";
+import RangeSlider  from "@/components/ui/Slider";
 import type { HotelFilters } from "@/services/hotels";
 import { formatINR } from "@/lib/format";
 
