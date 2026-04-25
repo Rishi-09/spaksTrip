@@ -7,6 +7,8 @@ import type { Airport } from "@/lib/mock/airports";
 
 export type TripType = "ONEWAY" | "ROUND" | "MULTI";
 
+export type FareCategory = "regular" | "student" | "armed_forces" | "senior_citizen";
+
 export type PaxCounts = {
   adults: number;
   children: number;
@@ -26,6 +28,7 @@ type State = {
   cabin: CabinClass;
   pax: PaxCounts;
   directOnly: boolean;
+  fareCategory: FareCategory;
   recent: Array<{
     id: string;
     label: string;
@@ -46,6 +49,7 @@ type Actions = {
   setCabin: (c: CabinClass) => void;
   setPax: (p: Partial<PaxCounts>) => void;
   setDirectOnly: (v: boolean) => void;
+  setFareCategory: (c: FareCategory) => void;
   pushRecent: (r: State["recent"][number]) => void;
   reset: () => void;
 };
@@ -59,6 +63,7 @@ const initial: State = {
   cabin: "ECONOMY",
   pax: { adults: 1, children: 0, infants: 0 },
   directOnly: false,
+  fareCategory: "regular",
   recent: [],
 };
 
@@ -95,6 +100,7 @@ export const useFlightSearchStore = create<State & Actions>()(
       setCabin: (c) => set({ cabin: c }),
       setPax: (p) => set((s) => ({ pax: { ...s.pax, ...p } })),
       setDirectOnly: (v) => set({ directOnly: v }),
+      setFareCategory: (c) => set({ fareCategory: c }),
       pushRecent: (r) =>
         set((s) => {
           const next = [r, ...s.recent.filter((x) => x.id !== r.id)].slice(0, 8);
@@ -110,7 +116,7 @@ export const useFlightSearchStore = create<State & Actions>()(
       storage: createJSONStorage(() =>
         typeof window !== "undefined" ? window.localStorage : (undefined as unknown as Storage),
       ),
-      partialize: (s) => ({ recent: s.recent, cabin: s.cabin, pax: s.pax }),
+      partialize: (s) => ({ recent: s.recent, cabin: s.cabin, pax: s.pax, fareCategory: s.fareCategory }),
     },
   ),
 );
