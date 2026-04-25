@@ -1,10 +1,11 @@
 "use client";
 
 import { Suspense, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import ResultsSearchStrip from "@/components/flight/ResultsSearchStrip";
+import FareCalendar from "@/components/flight/FareCalendar";
 import FlightFiltersPanel from "@/components/flight/FlightFilters";
 import FlightSortBar from "@/components/flight/FlightSortBar";
 import FlightResultCard from "@/components/flight/FlightResultCard";
@@ -14,8 +15,10 @@ import Drawer from "@/components/ui/Drawer";
 import { useFlightSearch } from "@/hooks/useFlightSearch";
 import { applyFilters, sortOffers, type FlightFilters, type SortBy } from "@/services/flights";
 import type { CabinClass } from "@/lib/mock/flights";
+import type { FareCategory } from "@/state/flightSearchStore";
 
 const CABINS: CabinClass[] = ["ECONOMY", "PREMIUM_ECONOMY", "BUSINESS", "FIRST"];
+const FARE_CATEGORIES: FareCategory[] = ["regular", "student", "armed_forces", "senior_citizen"];
 
 export default function FlightResultsPage() {
   return (
@@ -38,6 +41,7 @@ export default function FlightResultsPage() {
 }
 
 function FlightResultsInner() {
+  const router = useRouter();
   const sp = useSearchParams();
   const from = sp.get("from") ?? "DEL";
   const to = sp.get("to") ?? "BOM";
@@ -50,6 +54,8 @@ function FlightResultsInner() {
   const children = Number(sp.get("children") ?? "0");
   const infants = Number(sp.get("infants") ?? "0");
   const directOnly = sp.get("direct") === "1";
+  const fareCategoryParam = (sp.get("fareCategory") as FareCategory) ?? "regular";
+  const fareCategory = FARE_CATEGORIES.includes(fareCategoryParam) ? fareCategoryParam : "regular";
 
   const input = useMemo(
     () => ({ from, to, date: depart, cabin, adults, children, infants, directOnly }),
@@ -65,6 +71,12 @@ function FlightResultsInner() {
   const filtered = useMemo(() => {
     return sortOffers(applyFilters(offers, filters), sort);
   }, [offers, filters, sort]);
+
+  const handleDateChange = (date: string) => {
+    const next = new URLSearchParams(sp.toString());
+    next.set("depart", date);
+    router.push(`/flight/results?${next.toString()}`);
+  };
 
   const searchParamsString = sp.toString();
 
@@ -82,10 +94,17 @@ function FlightResultsInner() {
         infants={infants}
         cabin={cabin}
       />
+      <FareCalendar
+        from={from}
+        to={to}
+        cabin={cabin}
+        depart={depart}
+        onDateChange={handleDateChange}
+      />
       <main className="flex-1">
         <div className="mx-auto max-w-7xl px-4 md:px-6 py-5">
           <div className="grid lg:grid-cols-[280px_1fr] gap-6">
-            <aside className="hidden lg:block sticky top-[calc(theme(spacing.0)+140px)] self-start rounded-xl bg-white border border-border-soft p-5 shadow-[var(--shadow-xs)]">
+            <aside className="hidden lg:block sticky top-[calc(theme(spacing.0)+140px)] self-start rounded-xl bg-white border border-border-soft p-5 shadow-(--shadow-xs)">
               <FlightFiltersPanel
                 offers={offers}
                 filters={filters}
@@ -134,7 +153,12 @@ function FlightResultsInner() {
               ) : (
                 <div className="flex flex-col gap-3">
                   {filtered.map((o) => (
-                    <FlightResultCard key={o.id} offer={o} searchParams={searchParamsString} />
+                    <FlightResultCard
+                      key={o.id}
+                      offer={o}
+                      searchParams={searchParamsString}
+                      fareCategory={fareCategory}
+                    />
                   ))}
                 </div>
               )}

@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import Checkbox from "@/components/ui/Checkbox";
 import Button from "@/components/ui/Button";
 import DateRangePicker, { type DateRange } from "@/components/ui/DateRangePicker";
-import { useFlightSearchStore } from "@/state/flightSearchStore";
+import { useFlightSearchStore, type FareCategory } from "@/state/flightSearchStore";
 import AirportField from "./AirportField";
 import PassengerSelector from "./PassengerSelector";
 import TripTypeTabs from "./TripTypeTabs";
@@ -13,6 +13,13 @@ import { toIsoDate } from "@/lib/format";
 import { useToast } from "@/components/ui/Toast";
 
 type Props = { variant?: "hero" | "inline" };
+
+const FARE_CATEGORIES: Array<{ value: FareCategory; label: string }> = [
+  { value: "regular", label: "Regular" },
+  { value: "student", label: "Student" },
+  { value: "armed_forces", label: "Armed Forces" },
+  { value: "senior_citizen", label: "Senior Citizen" },
+];
 
 export default function FlightSearchForm({ variant = "hero" }: Props) {
   const router = useRouter();
@@ -25,6 +32,7 @@ export default function FlightSearchForm({ variant = "hero" }: Props) {
     cabin,
     pax,
     directOnly,
+    fareCategory,
     setTripType,
     setLeg,
     addLeg,
@@ -34,6 +42,7 @@ export default function FlightSearchForm({ variant = "hero" }: Props) {
     setCabin,
     setPax,
     setDirectOnly,
+    setFareCategory,
     pushRecent,
   } = useFlightSearchStore();
 
@@ -77,6 +86,7 @@ export default function FlightSearchForm({ variant = "hero" }: Props) {
       infants: String(pax.infants),
       trip: tripType,
       direct: directOnly ? "1" : "0",
+      fareCategory,
     });
     if (tripType === "ROUND" && returnDate) params.set("return", returnDate);
     if (tripType === "MULTI" && legs[1]?.from && legs[1]?.to && legs[1]?.date) {
@@ -103,20 +113,52 @@ export default function FlightSearchForm({ variant = "hero" }: Props) {
     <div
       className={
         isHero
-          ? "rounded-2xl bg-white p-5 shadow-[var(--shadow-lg)] md:p-6"
-          : "rounded-xl bg-white p-4 shadow-[var(--shadow-sm)] border border-border-soft"
+          ? "rounded-2xl bg-white p-5 shadow-(--shadow-lg) md:p-6"
+          : "rounded-xl bg-white p-4 shadow-(--shadow-sm) border border-border-soft"
       }
     >
+      {/* Row 1: Trip type + Non-stop */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <TripTypeTabs value={tripType} onChange={setTripType} />
         <div className="flex items-center gap-4">
           <Checkbox
             id="direct-only"
-            label="Direct flights only"
+            label="Non-stop"
             checked={directOnly}
             onChange={(e) => setDirectOnly(e.target.checked)}
           />
         </div>
+      </div>
+
+      {/* Row 2: Fare category chips */}
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <span className="text-[11px] font-semibold text-ink-muted uppercase tracking-wide">Fare type:</span>
+        {FARE_CATEGORIES.map((cat) => {
+          const active = fareCategory === cat.value;
+          return (
+            <button
+              key={cat.value}
+              type="button"
+              onClick={() => setFareCategory(cat.value)}
+              aria-pressed={active}
+              className={[
+                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[12px] font-semibold transition-colors",
+                active
+                  ? "border-brand-600 bg-brand-50 text-brand-700"
+                  : "border-border-soft bg-white text-ink-muted hover:border-brand-400 hover:text-ink",
+              ].join(" ")}
+            >
+              <span
+                className={[
+                  "inline-block h-2 w-2 rounded-full border",
+                  active ? "border-brand-600 bg-brand-600" : "border-ink-muted bg-white",
+                ].join(" ")}
+                aria-hidden
+              />
+              {cat.label}
+            </button>
+          );
+        })}
       </div>
 
       {tripType !== "MULTI" ? (
@@ -130,7 +172,7 @@ export default function FlightSearchForm({ variant = "hero" }: Props) {
             type="button"
             aria-label="Swap origin and destination"
             onClick={() => swapLeg(0)}
-            className="self-end mb-[3px] grid h-11 w-11 place-items-center rounded-full border border-border bg-white text-ink-soft hover:border-brand-500 hover:text-brand-600 transition-colors"
+            className="self-end mb-0.75 grid h-11 w-11 place-items-center rounded-full border border-border bg-white text-ink-soft hover:border-brand-500 hover:text-brand-600 transition-colors"
           >
             <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <polyline points="16 3 21 8 16 13" />
@@ -177,7 +219,7 @@ export default function FlightSearchForm({ variant = "hero" }: Props) {
                 type="button"
                 aria-label="Swap"
                 onClick={() => swapLeg(i)}
-                className="self-end mb-[3px] grid h-11 w-11 place-items-center rounded-full border border-border bg-white text-ink-soft hover:border-brand-500 hover:text-brand-600"
+                className="self-end mb-0.75 grid h-11 w-11 place-items-center rounded-full border border-border bg-white text-ink-soft hover:border-brand-500 hover:text-brand-600"
               >
                 <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" aria-hidden>
                   <polyline points="16 3 21 8 16 13" />
@@ -246,7 +288,7 @@ export default function FlightSearchForm({ variant = "hero" }: Props) {
 
       <div className="mt-5 flex items-center justify-between gap-3">
         <PopularRoutes />
-        <Button onClick={onSearch} loading={submitting} size="xl" variant="accent" className="min-w-[180px]">
+        <Button onClick={onSearch} loading={submitting} size="xl" variant="accent" className="min-w-45">
           Search Flights
         </Button>
       </div>
