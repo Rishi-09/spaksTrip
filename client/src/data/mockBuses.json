@@ -1,0 +1,192 @@
+[
+  {
+    "id": "BUS-DEL-JAI-01",
+    "operatorName": "IntrCity SmartBus",
+    "source": "Delhi",
+    "destination": "Jaipur",
+    "departureTime": "06:30",
+    "arrivalTime": "12:00",
+    "price": 699,
+    "busType": "AC Seater 2+2",
+    "boardingPoint": "Majnu Ka Tila, Delhi",
+    "droppingPoint": "Sindhi Camp, Jaipur",
+    "durationMinutes": 330,
+    "amenities": ["WiFi", "Water Bottle", "Charging Point"],
+    "seatLayout": {
+      "kind": "seater",
+      "rows": 10,
+      "columns": 4
+    }
+  },
+  {
+    "id": "BUS-DEL-JAI-02",
+    "operatorName": "Zingbus",
+    "source": "Delhi",
+    "destination": "Jaipur",
+    "departureTime": "22:15",
+    "arrivalTime": "04:00",
+    "price": 899,
+    "busType": "Volvo AC Sleeper",
+    "boardingPoint": "RK Ashram Metro, Delhi",
+    "droppingPoint": "Narayan Singh Circle, Jaipur",
+    "durationMinutes": 345,
+    "amenities": ["Blanket", "Charging Point", "Live Tracking"],
+    "seatLayout": {
+      "kind": "sleeper",
+      "rows": 8,
+      "columns": 3
+    }
+  },
+  {
+    "id": "BUS-DEL-MAN-01",
+    "operatorName": "Himalayan Express",
+    "source": "Delhi",
+    "destination": "Manali",
+    "departureTime": "19:45",
+    "arrivalTime": "08:15",
+    "price": 1599,
+    "busType": "Volvo Semi Sleeper",
+    "boardingPoint": "Kashmere Gate ISBT, Delhi",
+    "droppingPoint": "Mall Road, Manali",
+    "durationMinutes": 750,
+    "amenities": ["Blanket", "Water Bottle", "Charging Point"],
+    "seatLayout": {
+      "kind": "sleeper",
+      "rows": 8,
+      "columns": 3
+    }
+  },
+  {
+    "id": "BUS-DEL-CHA-01",
+    "operatorName": "Laxmi Holidays",
+    "source": "Delhi",
+    "destination": "Chandigarh",
+    "departureTime": "14:00",
+    "arrivalTime": "19:30",
+    "price": 749,
+    "busType": "AC Seater 2+2",
+    "boardingPoint": "Karol Bagh, Delhi",
+    "droppingPoint": "Sector 43, Chandigarh",
+    "durationMinutes": 330,
+    "amenities": ["WiFi", "Charging Point"],
+    "seatLayout": {
+      "kind": "seater",
+      "rows": 10,
+      "columns": 4
+    }
+  },
+  {
+    "id": "BUS-MUM-GOA-01",
+    "operatorName": "Paulo Travels",
+    "source": "Mumbai",
+    "destination": "Goa",
+    "departureTime": "21:30",
+    "arrivalTime": "09:15",
+    "price": 1399,
+    "busType": "AC Sleeper 2+1",
+    "boardingPoint": "Borivali East, Mumbai",
+    "droppingPoint": "Mapusa, Goa",
+    "durationMinutes": 705,
+    "amenities": ["Blanket", "Water Bottle", "Live Tracking"],
+    "seatLayout": {
+      "kind": "sleeper",
+      "rows": 8,
+      "columns": 3
+    }
+  },
+  {
+    "id": "BUS-MUM-PUN-01",
+    "operatorName": "Neeta Travels",
+    "source": "Mumbai",
+    "destination": "Pune",
+    "departureTime": "08:00",
+    "arrivalTime": "12:00",
+    "price": 599,
+    "busType": "AC Seater 2+2",
+    "boardingPoint": "Dadar TT, Mumbai",
+    "droppingPoint": "Wakad, Pune",
+    "durationMinutes": 240,
+    "amenities": ["Charging Point", "Reading Light"],
+    "seatLayout": {
+      "kind": "seater",
+      "rows": 10,
+      "columns": 4
+    }
+  },
+  {
+    "id": "BUS-BLR-CHE-01",
+    "operatorName": "KSRTC Airavat",
+    "source": "Bengaluru",
+    "destination": "Chennai",
+    "departureTime": "23:00",
+    "arrivalTime": "05:30",
+    "price": 999,
+    "busType": "AC Sleeper 2+1",
+    "boardingPoint": "Madiwala, Bengaluru",
+    "droppingPoint": "Koyambedu, Chennai",
+    "durationMinutes": 390,
+    "amenities": ["Blanket", "Charging Point", "Water Bottle"],
+    "seatLayout": {
+      "kind": "sleeper",
+      "rows": 8,
+      "columns": 3
+    }
+  },
+  {
+    "id": "BUS-BLR-HYD-01",
+    "operatorName": "Orange Tours",
+    "source": "Bengaluru",
+    "destination": "Hyderabad",
+    "departureTime": "22:45",
+    "arrivalTime": "07:00",
+    "price": 1199,
+    "busType": "AC Sleeper 2+1",
+    "boardingPoint": "Electronic City, Bengaluru",
+    "droppingPoint": "Miyapur, Hyderabad",
+    "durationMinutes": 495,
+    "amenities": ["WiFi", "Blanket", "Live Tracking"],
+    "seatLayout": {
+      "kind": "sleeper",
+      "rows": 8,
+      "columns": 3
+    }
+  },
+  {
+    "id": "BUS-AHM-UDI-01",
+    "operatorName": "Gujarat Travels",
+    "source": "Ahmedabad",
+    "destination": "Udaipur",
+    "departureTime": "07:15",
+    "arrivalTime": "12:45",
+    "price": 679,
+    "busType": "AC Seater 2+2",
+    "boardingPoint": "Paldi, Ahmedabad",
+    "droppingPoint": "Udaipole, Udaipur",
+    "durationMinutes": 330,
+    "amenities": ["Charging Point", "Water Bottle"],
+    "seatLayout": {
+      "kind": "seater",
+      "rows": 10,
+      "columns": 4
+    }
+  },
+  {
+    "id": "BUS-LKO-VAR-01",
+    "operatorName": "Royal Cruiser",
+    "source": "Lucknow",
+    "destination": "Varanasi",
+    "departureTime": "09:30",
+    "arrivalTime": "15:15",
+    "price": 649,
+    "busType": "AC Seater 2+2",
+    "boardingPoint": "Alambagh, Lucknow",
+    "droppingPoint": "Cantt Bus Stand, Varanasi",
+    "durationMinutes": 345,
+    "amenities": ["Water Bottle", "Charging Point"],
+    "seatLayout": {
+      "kind": "seater",
+      "rows": 10,
+      "columns": 4
+    }
+  }
+]

@@ -15,7 +15,18 @@ type NavItem = {
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Flight", href: "/flight" },
-  { label: "Train", href: "/rail" },
+  { label: "Hotel", href: "/hotel" },
+    {
+    label: "Train",
+    href: "#",
+    menu: [
+      { label: "Search", href: "/search" },
+      { label: "Tickets", href: "/tickets" },
+      { label: "Change Request", href: "/change-request" },
+      { label: "File TDR Online", href: "/file-tdr-online" },
+      
+    ],
+  },
   {
     label: "Holiday Packages",
     href: "#",
@@ -28,7 +39,7 @@ const NAV_ITEMS: NavItem[] = [
     label: "Accommodation",
     href: "#",
     menu: [
-      { label: "Hotel", href: "/hotel" },
+      
       { label: "Homestay", href: "#" },
       { label: "Airbnb", href: "#" },
       { label: "Villa", href: "#" },
@@ -42,15 +53,15 @@ const NAV_ITEMS: NavItem[] = [
     label: "Transport",
     href: "#",
     menu: [
-      { label: "Airport Transfer", href: "/taxi-package" },
-      { label: "Outstation Cab", href: "/taxi-package" },
-      { label: "Sightseeing Tours", href: "/taxi-package" },
-      { label: "Local Cabs", href: "/cabs" },
-      { label: "Tour Bus", href: "#" },
+      { label: "Taxi Package", href: "/taxi-package" },
+      { label: "Cabs", href: "/cabs" },
+      { label: "Tour Bus", href: "/tour-bus" },
+      { label: "Train", href: "/train" },
+      
     ],
   },
   { label: "Cruise", href: "/cruise" },
-  { label: "Bus", href: "#" },
+  { label: "Bus", href: "/bus" },
   { label: "Events", href: "/events" },
   {
     label: "Visa Consultancy",
