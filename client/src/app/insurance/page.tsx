@@ -1,4 +1,5 @@
 import InsuranceBuy from "@/components/insurance/InsuranceBuy";
+import InsurancePlansTable from "@/components/insurance/InsurancePlansTable";
 import InsuranceCredentials from "@/components/insurance/InsuranceCredentials";
 import InsuranceReviews from "@/components/insurance/InsuranceReviews";
 import InsuranceFAQ from "@/components/insurance/InsuranceFAQ";
@@ -12,6 +13,7 @@ export default function InsurancePage() {
       <Header />
       <main>
         <InsuranceBuy />
+        <InsurancePlansTable />
         <InsuranceCredentials />
         <InsuranceReviews />
         <InsuranceFAQ />

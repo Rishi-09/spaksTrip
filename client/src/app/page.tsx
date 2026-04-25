@@ -5,6 +5,7 @@ import ExpediaSearch from "@/components/landing/ExpediaSearch";
 import Footer from "@/components/landing/Footer";
 import Header from "@/components/landing/Header";
 import HeroCarousel from "@/components/landing/HeroCarousel";
+import RecentSearches from "@/components/landing/RecentSearches";
 import Testimonials from "@/components/landing/Testimonials";
 import TopHotelDeals from "@/components/landing/TopHotelDeals";
 import WhyChooseUs from "@/components/landing/WhyChooseUs";
@@ -16,6 +17,7 @@ export default function Home() {
       <main>
         <HeroCarousel />
         <ExpediaSearch />
+        <RecentSearches />
         <Destinations />
         <WhyChooseUs />
         <TopHotelDeals />

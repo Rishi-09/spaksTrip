@@ -27,10 +27,10 @@ export default function Accordion({
 
   return (
     <div className={cn("flex flex-col divide-y divide-border-soft", className)}>
-      {items.map((it) => {
+      {items.map((it,i) => {
         const isOpen = open.has(it.value);
         return (
-          <div key={it.value}>
+          <div key={i}>
             <button
               type="button"
               onClick={() => toggle(it.value)}

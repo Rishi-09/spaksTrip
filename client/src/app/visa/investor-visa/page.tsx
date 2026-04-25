@@ -1,5 +1,6 @@
 import VisaHero from "@/components/visa/VisaHero";
 import InvestorVisaContent from "@/components/visa/InvestorVisaContent";
+import DocumentChecklist from "@/components/visa/DocumentChecklist";
 import VisaFAQ from "@/components/visa/VisaFAQ";
 import BackToTop from "@/components/landing/BackToTop";
 import Footer from "@/components/landing/Footer";
@@ -11,6 +12,7 @@ export default function InvestorVisaPage() {
       <Header />
       <main>
         <VisaHero title="Investor Visa" />
+        <DocumentChecklist type="investor-visa" />
         <InvestorVisaContent />
         <VisaFAQ title="PR" />
       </main>

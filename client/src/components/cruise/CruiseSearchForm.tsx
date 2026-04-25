@@ -1,67 +1,87 @@
 "use client";
 
-const NIGHTS = ["Night ?", "1 Night", "2 Nights", "3 Nights", "4 Nights", "5 Nights", "7 Nights", "10 Nights", "14 Nights"];
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import Button from "@/components/ui/Button";
+import Chip from "@/components/ui/Chip";
+import { useToast } from "@/components/ui/Toast";
+
+const PORTS = [
+  "Mumbai", "Goa", "Dubai", "Singapore", "Barcelona", "Athens", "Hong Kong", "Sydney",
+];
+
+const NIGHT_OPTIONS = [
+  { label: "Any", value: "" },
+  { label: "3N", value: "3" },
+  { label: "5N", value: "5" },
+  { label: "7N", value: "7" },
+  { label: "10N", value: "10" },
+  { label: "14N", value: "14" },
+];
 
 export default function CruiseSearchForm() {
+  const router = useRouter();
+  const toast = useToast();
+
+  const [port, setPort] = useState("");
+  const [month, setMonth] = useState("");
+  const [nights, setNights] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const onSearch = () => {
+    if (!port) { toast.push({ title: "Select a departure port", tone: "warn" }); return; }
+    setSubmitting(true);
+    const params = new URLSearchParams({ port, month: month || "any", nights: nights || "any" });
+    router.push(`/cruise/results?${params.toString()}`);
+  };
+
   return (
-    <form
-      onSubmit={(e) => e.preventDefault()}
-      className="w-full rounded-2xl bg-white shadow-xl overflow-hidden"
-    >
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_auto]">
-        <Cell label="Select Destination">
-          <input
-            type="text"
-            aria-label="Destination"
-            placeholder="Where to ?"
-            className="w-full bg-transparent text-lg font-bold text-zinc-800 placeholder:text-zinc-700 placeholder:font-bold outline-none pt-1"
-          />
-        </Cell>
-
-        <Cell label="Date">
-          <input
-            type="date"
-            aria-label="Travel date"
-            className="w-full bg-transparent text-base font-medium text-zinc-700 outline-none pt-1"
-          />
-        </Cell>
-
-        <Cell label="Select Night">
-          <select
-            aria-label="Number of nights"
-            defaultValue="Night ?"
-            className="w-full bg-transparent text-lg font-bold text-zinc-800 outline-none pt-1 appearance-none cursor-pointer"
-          >
-            {NIGHTS.map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
+    <div className="w-full rounded-2xl bg-white p-5 shadow-(--shadow-lg)">
+      <div className="flex flex-col gap-4">
+        {/* Departure port */}
+        <div>
+          <p className="text-[12px] font-medium text-ink-muted mb-2">Departure Port</p>
+          <div className="flex flex-wrap gap-2">
+            {PORTS.map((p) => (
+              <Chip key={p} active={port === p} onClick={() => setPort(p)}>{p}</Chip>
             ))}
-          </select>
-        </Cell>
+          </div>
+        </div>
 
-        <button
-          type="submit"
-          className="bg-white text-zinc-800 font-semibold text-base px-10 py-6 hover:bg-zinc-50 transition-colors border-l border-zinc-200"
-        >
-          Search
-        </button>
+        {/* Month */}
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div>
+            <p className="text-[12px] font-medium text-ink-muted mb-1">Travel Month</p>
+            <select
+              value={month}
+              onChange={(e) => setMonth(e.target.value)}
+              className="h-11 w-full rounded-lg border border-border px-3 text-[14px] font-medium text-ink bg-white focus:border-brand-500 focus:outline-none transition-colors"
+              aria-label="Select travel month"
+            >
+              <option value="">Any month</option>
+              {["January","February","March","April","May","June","July","August","September","October","November","December"].map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Nights filter */}
+          <div>
+            <p className="text-[12px] font-medium text-ink-muted mb-2">Duration</p>
+            <div className="flex flex-wrap gap-2">
+              {NIGHT_OPTIONS.map((n) => (
+                <Chip key={n.value} active={nights === n.value} onClick={() => setNights(n.value)}>
+                  {n.label}
+                </Chip>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <Button onClick={onSearch} loading={submitting} size="lg" variant="accent">
+          Search Cruises
+        </Button>
       </div>
-    </form>
-  );
-}
-
-function Cell({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col justify-center border-b md:border-b-0 md:border-r border-zinc-200 px-6 py-5">
-      <span className="text-xs font-medium text-zinc-500 mb-0.5">{label}</span>
-      {children}
     </div>
   );
 }
