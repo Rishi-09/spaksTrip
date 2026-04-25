@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Badge from "@/components/ui/Badge";
 import { formatINR } from "@/lib/format";
 import EnquiryModal from "./EnquiryModal";
@@ -12,14 +13,23 @@ export type TourPackage = {
   price?: number;
   highlights?: string[];
   category?: "Budget" | "Premium" | "Luxury";
+  href?: string;
 };
 
 export default function TourPackageCard({ pkg }: { pkg: TourPackage }) {
   const [enquiryOpen, setEnquiryOpen] = useState(false);
+  const router = useRouter();
+
+  const handleCardClick = () => {
+    if (pkg.href) router.push(pkg.href);
+  };
 
   return (
     <>
-      <article className="flex flex-col rounded-xl border border-border-soft bg-white shadow-(--shadow-xs) hover:shadow-(--shadow-sm) transition-shadow overflow-hidden">
+      <article
+        className={`flex flex-col rounded-xl border border-border-soft bg-white shadow-(--shadow-xs) hover:shadow-(--shadow-sm) transition-shadow overflow-hidden${pkg.href ? " cursor-pointer" : ""}`}
+        onClick={pkg.href ? handleCardClick : undefined}
+      >
         <div className="relative overflow-hidden">
           <img
             src={pkg.image}
@@ -75,7 +85,7 @@ export default function TourPackageCard({ pkg }: { pkg: TourPackage }) {
             ) : <div />}
             <button
               type="button"
-              onClick={() => setEnquiryOpen(true)}
+              onClick={(e) => { e.stopPropagation(); setEnquiryOpen(true); }}
               className="rounded-lg bg-accent-500 px-4 py-2 text-[13px] font-bold text-white hover:bg-accent-600 transition-colors"
             >
               Enquire Now
