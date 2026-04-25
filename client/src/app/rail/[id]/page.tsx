@@ -144,12 +144,12 @@ function TrainDetailInner() {
           <Accordion
             items={[
               {
-                id: "route",
+                value: "route",
                 title: `Route (${train.stops.length} stations)`,
                 content: <TrainRouteStops stops={train.stops} />,
               },
               {
-                id: "coach",
+                value: "coach",
                 title: `Coach Layout — ${highlightCls}`,
                 content: <CoachLayoutDiagram cls={highlightCls} />,
               },
