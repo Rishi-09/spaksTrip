@@ -84,7 +84,7 @@ export default function DocumentChecklist({ type }: Props) {
           <Accordion
             items={[
               {
-                id: "required",
+                value: "required",
                 title: `Mandatory Documents (${required.length})`,
                 content: (
                   <ul className="flex flex-col gap-3 py-1">
@@ -107,7 +107,7 @@ export default function DocumentChecklist({ type }: Props) {
               ...(optional.length > 0
                 ? [
                     {
-                      id: "optional",
+                      value: "optional",
                       title: `Additional / Optional Documents (${optional.length})`,
                       content: (
                         <ul className="flex flex-col gap-3 py-1">
