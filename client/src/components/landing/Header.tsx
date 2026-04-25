@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Logo from "./Logo";
 import { cn } from "@/lib/cn";
 import AuthModal from "@/components/auth/AuthModal";
@@ -68,11 +68,44 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Offers", href: "/offers" },
 ];
 
+const COUNTRIES = [
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Argentina", "Armenia",
+  "Australia", "Austria", "Azerbaijan", "Bahrain", "Bangladesh", "Belarus", "Belgium",
+  "Bolivia", "Bosnia and Herzegovina", "Brazil", "Bulgaria", "Cambodia", "Cameroon",
+  "Canada", "Chile", "China", "Colombia", "Croatia", "Cuba", "Cyprus", "Czech Republic",
+  "Denmark", "Ecuador", "Egypt", "Estonia", "Ethiopia", "Finland", "France", "Georgia",
+  "Germany", "Ghana", "Greece", "Guatemala", "Hungary", "India", "Indonesia", "Iran",
+  "Iraq", "Ireland", "Israel", "Italy", "Japan", "Jordan", "Kazakhstan", "Kenya",
+  "Kuwait", "Latvia", "Lebanon", "Lithuania", "Luxembourg", "Malaysia", "Maldives",
+  "Malta", "Mexico", "Moldova", "Mongolia", "Morocco", "Myanmar", "Nepal", "Netherlands",
+  "New Zealand", "Nigeria", "North Korea", "Norway", "Oman", "Pakistan", "Palestine",
+  "Panama", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia",
+  "Saudi Arabia", "Senegal", "Serbia", "Singapore", "Slovakia", "Slovenia", "Somalia",
+  "South Africa", "South Korea", "Spain", "Sri Lanka", "Sudan", "Sweden", "Switzerland",
+  "Syria", "Taiwan", "Tanzania", "Thailand", "Tunisia", "Turkey", "Uganda", "Ukraine",
+  "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan",
+  "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe",
+];
+
+const CURRENCIES = ["INR", "USD"];
+
+const LANGUAGES = [
+  "English", "Hindi", "Spanish", "French", "Chinese",
+  "Arabic", "Bengali", "Portuguese", "Russian", "Urdu",
+];
+
+type OpenDropdown = "country" | "currency" | "language" | null;
+
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [authTab, setAuthTab] = useState<"customer" | "agent">("customer");
+  const [country, setCountry] = useState("India");
+  const [currency, setCurrency] = useState("INR");
+  const [language, setLanguage] = useState("English");
+  const [openDropdown, setOpenDropdown] = useState<OpenDropdown>(null);
+  const utilityBarRef = useRef<HTMLDivElement>(null);
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
 
@@ -80,11 +113,31 @@ export default function Header() {
     setMobileExpanded((current) => (current === label ? null : label));
   };
 
+  const toggleDropdown = useCallback(
+    (name: OpenDropdown) => setOpenDropdown((prev) => (prev === name ? null : name)),
+    [],
+  );
+
+  useEffect(() => {
+    function handleOutside(e: MouseEvent) {
+      if (utilityBarRef.current && !utilityBarRef.current.contains(e.target as Node)) {
+        setOpenDropdown(null);
+      }
+    }
+    if (openDropdown) {
+      document.addEventListener("mousedown", handleOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, [openDropdown]);
+
   return (
     <header className="sticky top-0 z-40 w-full bg-white shadow-(--shadow-xs)">
       {/* Top utility bar */}
       <div className="bg-brand-900 text-white text-[13px]">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2.5 sm:px-6">
+        <div
+          ref={utilityBarRef}
+          className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2.5 sm:px-6"
+        >
           <a
             href="tel:+919220328072"
             className="flex items-center gap-2 text-white/85 hover:text-white transition-colors"
@@ -94,9 +147,41 @@ export default function Header() {
             </svg>
             +91 922 032 8072
           </a>
-          <div className="hidden sm:flex items-center gap-2">
+
+          <div className="hidden sm:flex items-center gap-3">
+            {/* Country / Currency / Language selectors */}
+            <div className="flex items-center gap-3 border-r border-white/20 pr-3">
+              <SelectDropdown
+                label="Country"
+                options={COUNTRIES}
+                value={country}
+                onChange={setCountry}
+                isOpen={openDropdown === "country"}
+                onToggle={() => toggleDropdown("country")}
+              />
+              <span className="text-white/30 select-none">|</span>
+              <SelectDropdown
+                label="Currency"
+                options={CURRENCIES}
+                value={currency}
+                onChange={setCurrency}
+                isOpen={openDropdown === "currency"}
+                onToggle={() => toggleDropdown("currency")}
+              />
+              <span className="text-white/30 select-none">|</span>
+              <SelectDropdown
+                label="Language"
+                options={LANGUAGES}
+                value={language}
+                onChange={setLanguage}
+                isOpen={openDropdown === "language"}
+                onToggle={() => toggleDropdown("language")}
+              />
+            </div>
+
+            {/* Login / user actions */}
             {user ? (
-              <>
+              <div className="flex items-center gap-2">
                 <Link href="/my-trips" className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-white/85 hover:text-white text-[12px] font-semibold transition-colors">
                   My Trips
                 </Link>
@@ -105,13 +190,13 @@ export default function Header() {
                 <button type="button" onClick={logout} className="inline-flex items-center gap-1.5 rounded-full border border-white/30 px-3 py-1.5 text-white/85 hover:text-white text-[12px] font-semibold transition-colors">
                   Sign Out
                 </button>
-              </>
+              </div>
             ) : (
-              <>
+              <div className="flex items-center gap-2">
                 <LoginPill tone="accent" label="Customer Login" onClick={() => { setAuthTab("customer"); setAuthOpen(true); }} />
                 <LoginPill tone="info" label="Partner Login" href="/partner-login" />
                 <LoginPill tone="brand" label="Agent Login" onClick={() => { setAuthTab("agent"); setAuthOpen(true); }} />
-              </>
+              </div>
             )}
           </div>
         </div>
@@ -186,6 +271,12 @@ export default function Header() {
 
       {mobileOpen && (
         <nav className="lg:hidden border-b border-border-soft bg-white max-h-[70vh] overflow-y-auto scrollbar-thin">
+          {/* Mobile selectors row */}
+          <div className="grid grid-cols-3 gap-2 border-b border-border-soft/60 px-4 py-3 sm:px-6">
+            <MobileSelect label="Country" options={COUNTRIES} value={country} onChange={setCountry} />
+            <MobileSelect label="Currency" options={CURRENCIES} value={currency} onChange={setCurrency} />
+            <MobileSelect label="Language" options={LANGUAGES} value={language} onChange={setLanguage} />
+          </div>
           <ul className="flex flex-col py-2">
             {NAV_ITEMS.map((item) => (
               <li key={item.label}>
@@ -251,6 +342,101 @@ export default function Header() {
         </nav>
       )}
     </header>
+  );
+}
+
+function SelectDropdown({
+  label,
+  options,
+  value,
+  onChange,
+  isOpen,
+  onToggle,
+}: {
+  label: string;
+  options: string[];
+  value: string;
+  onChange: (v: string) => void;
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={isOpen}
+        aria-label={`${label}: ${value}`}
+        className="flex items-center gap-1 text-white/85 hover:text-white transition-colors whitespace-nowrap"
+      >
+        <span>{value}</span>
+        <svg
+          viewBox="0 0 24 24"
+          width={11}
+          height={11}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+          className={cn("transition-transform duration-150", isOpen && "rotate-180")}
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <div
+          role="listbox"
+          aria-label={label}
+          className="absolute left-0 top-[calc(100%+8px)] z-50 min-w-[10rem] max-h-60 overflow-y-auto rounded-lg bg-white border border-border-soft shadow-(--shadow-pop) py-1"
+        >
+          {options.map((opt) => (
+            <button
+              key={opt}
+              type="button"
+              role="option"
+              aria-selected={value === opt}
+              onClick={() => { onChange(opt); onToggle(); }}
+              className={cn(
+                "w-full text-left px-3 py-2 text-[13px] text-ink hover:bg-brand-50 hover:text-brand-700 transition-colors",
+                value === opt && "bg-brand-50 text-brand-700 font-semibold",
+              )}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MobileSelect({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: string[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <label className="flex flex-col gap-0.5 min-w-0">
+      <span className="text-[10px] font-medium uppercase tracking-wide text-ink-soft">{label}</span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full truncate rounded border border-border-soft bg-white px-2 py-1 text-[12px] text-ink focus:outline-none focus:ring-1 focus:ring-brand-500"
+      >
+        {options.map((opt) => (
+          <option key={opt} value={opt}>{opt}</option>
+        ))}
+      </select>
+    </label>
   );
 }
 
