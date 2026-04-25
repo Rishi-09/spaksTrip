@@ -9,20 +9,32 @@ import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import AirlineLogo from "./AirlineLogo";
 import FareFamilyModal from "./FareFamilyModal";
+import type { FareCategory } from "@/state/flightSearchStore";
+
+const FARE_CATEGORY_LABEL: Record<FareCategory, string> = {
+  regular: "",
+  student: "Student Fare",
+  armed_forces: "Armed Forces Fare",
+  senior_citizen: "Senior Citizen Fare",
+};
 
 type Props = {
   offer: FlightOffer;
   searchParams: string;
+  fareCategory?: FareCategory;
 };
 
-export default function FlightResultCard({ offer, searchParams }: Props) {
+export default function FlightResultCard({ offer, searchParams, fareCategory = "regular" }: Props) {
   const [open, setOpen] = useState(false);
   const [expand, setExpand] = useState(false);
   const firstSeg = offer.segments[0];
   const lastSeg = offer.segments[offer.segments.length - 1];
 
+  const discounted = fareCategory === "armed_forces" || fareCategory === "senior_citizen";
+  const displayPrice = discounted ? Math.round(offer.basePrice * 0.95) : offer.basePrice;
+
   return (
-    <article className="rounded-xl bg-white border border-border-soft shadow-[var(--shadow-xs)] hover:shadow-[var(--shadow-sm)] transition-shadow overflow-hidden">
+    <article className="rounded-xl bg-white border border-border-soft shadow-(--shadow-xs) hover:shadow-(--shadow-sm) transition-shadow overflow-hidden">
       <div className="grid lg:grid-cols-[1fr_auto] gap-4">
         <div className="p-5">
           <div className="flex items-start justify-between gap-4">
@@ -37,7 +49,10 @@ export default function FlightResultCard({ offer, searchParams }: Props) {
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap justify-end">
+              {fareCategory !== "regular" && (
+                <Badge tone="info">{FARE_CATEGORY_LABEL[fareCategory]}</Badge>
+              )}
               {offer.refundable && <Badge tone="success">Refundable</Badge>}
               {offer.seatsLeft <= 5 && (
                 <Badge tone="danger">{offer.seatsLeft} seats left</Badge>
@@ -98,7 +113,12 @@ export default function FlightResultCard({ offer, searchParams }: Props) {
 
           <div className="mt-3 flex flex-wrap gap-1.5">
             <Badge tone="neutral">Cabin {offer.baggage.cabin} kg</Badge>
-            <Badge tone="neutral">Check-in {offer.baggage.checkin} kg</Badge>
+            <Badge tone="neutral">
+              Check-in {fareCategory === "student" ? offer.baggage.checkin + 5 : offer.baggage.checkin} kg
+              {fareCategory === "student" && (
+                <span className="ml-1 text-success-700 font-bold">+5kg</span>
+              )}
+            </Badge>
             <Badge tone="info">{offer.cabin.replace("_", " ")}</Badge>
           </div>
 
@@ -159,12 +179,20 @@ export default function FlightResultCard({ offer, searchParams }: Props) {
         <div className="lg:border-l border-t lg:border-t-0 border-border-soft p-5 flex flex-col items-stretch lg:items-end justify-between gap-3 bg-surface-muted lg:bg-transparent">
           <div className="text-right">
             <div className="text-[11px] text-ink-muted">starting from</div>
+            {discounted && (
+              <div className="text-[12px] text-ink-muted line-through leading-none">
+                {formatINR(offer.basePrice)}
+              </div>
+            )}
             <div className="text-2xl font-extrabold text-ink leading-none">
-              {formatINR(offer.basePrice)}
+              {formatINR(displayPrice)}
             </div>
+            {discounted && (
+              <div className="text-[11px] font-semibold text-success-600">5% off applied</div>
+            )}
             <div className="text-[11px] text-ink-muted mt-0.5">per adult, incl. taxes</div>
           </div>
-          <div className="flex flex-col gap-2 lg:min-w-[180px]">
+          <div className="flex flex-col gap-2 lg:min-w-45">
             <Button variant="accent" onClick={() => setOpen(true)}>
               Book now
             </Button>
