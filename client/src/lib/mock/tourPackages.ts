@@ -1,3 +1,23 @@
+export type Availability = "available" | "limited" | "sold_out";
+
+export type CalendarDate = {
+  date: string;
+  price: number;
+  availability: Availability;
+  seats_left: number;
+  total_seats: number;
+};
+
+export type GroupTour = {
+  id: string;
+  start_date: string;
+  end_date: string;
+  group_size: number;
+  seats_left: number;
+  price: number;
+  type: "Backpacking" | "Luxury" | "Family" | "Adventure" | "Cultural";
+};
+
 export type TourListItem = {
   id: number;
   categoryId: number;
@@ -29,6 +49,8 @@ export type TourDetail = TourListItem & {
   cancellationPolicy: string[];
   termsAndConditions: string;
   gallery: string[];
+  calendar?: CalendarDate[];
+  groupTours?: GroupTour[];
 };
 
 // ------------------------------------------------------------------
@@ -576,6 +598,70 @@ By accessing and using this website, you agree to be bound by these terms and co
 5. Linking to Spakstrip
 • You may not create a link to this website from another website without prior written consent from Spakstrip.`;
 
+// ------------------------------------------------------------------
+// Calendar dates for Leh Ladakh packages (ID 1)
+// ------------------------------------------------------------------
+const LADAKH_CALENDAR: CalendarDate[] = [
+  { date: "2026-05-02", price: 19999, availability: "available",  seats_left: 16, total_seats: 20 },
+  { date: "2026-05-09", price: 19999, availability: "available",  seats_left: 18, total_seats: 20 },
+  { date: "2026-05-16", price: 21999, availability: "limited",    seats_left: 3,  total_seats: 20 },
+  { date: "2026-05-23", price: 19999, availability: "sold_out",   seats_left: 0,  total_seats: 20 },
+  { date: "2026-05-30", price: 19999, availability: "available",  seats_left: 14, total_seats: 20 },
+  { date: "2026-06-06", price: 22999, availability: "available",  seats_left: 20, total_seats: 20 },
+  { date: "2026-06-13", price: 22999, availability: "limited",    seats_left: 5,  total_seats: 20 },
+  { date: "2026-06-20", price: 22999, availability: "sold_out",   seats_left: 0,  total_seats: 20 },
+  { date: "2026-06-27", price: 22999, availability: "available",  seats_left: 12, total_seats: 20 },
+  { date: "2026-07-04", price: 24999, availability: "available",  seats_left: 18, total_seats: 20 },
+  { date: "2026-07-11", price: 24999, availability: "available",  seats_left: 15, total_seats: 20 },
+  { date: "2026-07-18", price: 24999, availability: "limited",    seats_left: 2,  total_seats: 20 },
+  { date: "2026-07-25", price: 24999, availability: "available",  seats_left: 10, total_seats: 20 },
+  { date: "2026-08-01", price: 24999, availability: "available",  seats_left: 19, total_seats: 20 },
+  { date: "2026-08-08", price: 24999, availability: "available",  seats_left: 17, total_seats: 20 },
+  { date: "2026-08-15", price: 24999, availability: "sold_out",   seats_left: 0,  total_seats: 20 },
+  { date: "2026-08-22", price: 22999, availability: "available",  seats_left: 11, total_seats: 20 },
+  { date: "2026-08-29", price: 22999, availability: "limited",    seats_left: 4,  total_seats: 20 },
+  { date: "2026-09-05", price: 19999, availability: "available",  seats_left: 16, total_seats: 20 },
+  { date: "2026-09-12", price: 19999, availability: "available",  seats_left: 20, total_seats: 20 },
+];
+
+const LADAKH_GROUP_TOURS: GroupTour[] = [
+  { id: "grp_001", start_date: "2026-05-02", end_date: "2026-05-07", group_size: 14, seats_left: 6,  price: 19999, type: "Backpacking" },
+  { id: "grp_002", start_date: "2026-05-16", end_date: "2026-05-21", group_size: 8,  seats_left: 3,  price: 21999, type: "Adventure"  },
+  { id: "grp_003", start_date: "2026-05-30", end_date: "2026-06-04", group_size: 16, seats_left: 8,  price: 19999, type: "Family"     },
+  { id: "grp_004", start_date: "2026-06-13", end_date: "2026-06-18", group_size: 10, seats_left: 4,  price: 22999, type: "Cultural"   },
+  { id: "grp_005", start_date: "2026-07-04", end_date: "2026-07-09", group_size: 20, seats_left: 11, price: 24999, type: "Backpacking" },
+  { id: "grp_006", start_date: "2026-07-18", end_date: "2026-07-23", group_size: 6,  seats_left: 2,  price: 24999, type: "Luxury"     },
+  { id: "grp_007", start_date: "2026-08-01", end_date: "2026-08-06", group_size: 18, seats_left: 9,  price: 24999, type: "Adventure"  },
+  { id: "grp_008", start_date: "2026-09-05", end_date: "2026-09-10", group_size: 12, seats_left: 7,  price: 19999, type: "Family"     },
+];
+
+// ------------------------------------------------------------------
+// Calendar dates for Dubai packages (ID 101)
+// ------------------------------------------------------------------
+const DUBAI_CALENDAR: CalendarDate[] = [
+  { date: "2026-05-03", price: 34999, availability: "available",  seats_left: 18, total_seats: 25 },
+  { date: "2026-05-10", price: 34999, availability: "limited",    seats_left: 4,  total_seats: 25 },
+  { date: "2026-05-17", price: 36999, availability: "available",  seats_left: 20, total_seats: 25 },
+  { date: "2026-05-24", price: 36999, availability: "sold_out",   seats_left: 0,  total_seats: 25 },
+  { date: "2026-05-31", price: 34999, availability: "available",  seats_left: 15, total_seats: 25 },
+  { date: "2026-06-07", price: 38999, availability: "available",  seats_left: 22, total_seats: 25 },
+  { date: "2026-06-14", price: 38999, availability: "limited",    seats_left: 3,  total_seats: 25 },
+  { date: "2026-06-21", price: 38999, availability: "available",  seats_left: 19, total_seats: 25 },
+  { date: "2026-07-05", price: 40999, availability: "available",  seats_left: 25, total_seats: 25 },
+  { date: "2026-07-19", price: 40999, availability: "limited",    seats_left: 2,  total_seats: 25 },
+  { date: "2026-08-02", price: 38999, availability: "available",  seats_left: 14, total_seats: 25 },
+  { date: "2026-08-16", price: 36999, availability: "sold_out",   seats_left: 0,  total_seats: 25 },
+  { date: "2026-08-30", price: 34999, availability: "available",  seats_left: 17, total_seats: 25 },
+];
+
+const DUBAI_GROUP_TOURS: GroupTour[] = [
+  { id: "dxb_001", start_date: "2026-05-03", end_date: "2026-05-07", group_size: 15, seats_left: 7,  price: 34999, type: "Luxury"     },
+  { id: "dxb_002", start_date: "2026-05-17", end_date: "2026-05-21", group_size: 12, seats_left: 5,  price: 36999, type: "Family"     },
+  { id: "dxb_003", start_date: "2026-06-07", end_date: "2026-06-11", group_size: 20, seats_left: 11, price: 38999, type: "Backpacking" },
+  { id: "dxb_004", start_date: "2026-07-05", end_date: "2026-07-09", group_size: 8,  seats_left: 3,  price: 40999, type: "Adventure"  },
+  { id: "dxb_005", start_date: "2026-08-02", end_date: "2026-08-06", group_size: 16, seats_left: 9,  price: 38999, type: "Cultural"   },
+];
+
 export const NATIONAL_DETAILS: Record<number, TourDetail> = {
   1: {
     ...NATIONAL_PACKAGES[0],
@@ -591,6 +677,8 @@ export const NATIONAL_DETAILS: Record<number, TourDetail> = {
     cancellationPolicy: STANDARD_CANCELLATION,
     termsAndConditions: STANDARD_TERMS,
     gallery: LADAKH_DETAIL_IMAGES,
+    calendar: LADAKH_CALENDAR,
+    groupTours: LADAKH_GROUP_TOURS,
   },
   2: {
     ...NATIONAL_PACKAGES[1],
@@ -609,6 +697,8 @@ export const NATIONAL_DETAILS: Record<number, TourDetail> = {
     cancellationPolicy: STANDARD_CANCELLATION,
     termsAndConditions: STANDARD_TERMS,
     gallery: LADAKH_DETAIL_IMAGES,
+    calendar: LADAKH_CALENDAR,
+    groupTours: LADAKH_GROUP_TOURS,
   },
 };
 
@@ -694,6 +784,8 @@ export const INTERNATIONAL_DETAILS: Record<number, TourDetail> = {
     cancellationPolicy: STANDARD_CANCELLATION,
     termsAndConditions: STANDARD_TERMS,
     gallery: DUBAI_DETAIL_IMAGES,
+    calendar: DUBAI_CALENDAR,
+    groupTours: DUBAI_GROUP_TOURS,
   },
 };
 

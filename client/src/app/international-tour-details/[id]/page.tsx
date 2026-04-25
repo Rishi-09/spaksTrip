@@ -7,11 +7,15 @@ import Footer from "@/components/landing/Footer";
 import BackToTop from "@/components/landing/BackToTop";
 import BookingSidebar from "@/components/holiday-packages/BookingSidebar";
 import ItineraryBlock from "@/components/holiday-packages/ItineraryBlock";
+import CalendarView from "@/components/holiday-packages/CalendarView";
+import GroupTourList from "@/components/holiday-packages/GroupTourList";
 import { getInternationalDetail } from "@/lib/mock/tourPackages";
+import type { GroupTour } from "@/lib/mock/tourPackages";
 
 const TABS = [
   "Location View Map",
   "Tour Calendar",
+  "Group Tours",
   "Tour Package Cost List",
   "Inclusions/Exclusions",
   "Tour Type Rooms",
@@ -24,6 +28,18 @@ export default function InternationalTourDetailsPage() {
 
   const [activeImage, setActiveImage] = useState(0);
   const [activeTab, setActiveTab] = useState<string>(TABS[0]);
+  const [selectedCheckIn, setSelectedCheckIn] = useState("");
+  const [selectedCheckOut, setSelectedCheckOut] = useState("");
+
+  function handleDateSelect(ci: string, co: string) {
+    setSelectedCheckIn(ci);
+    setSelectedCheckOut(co);
+  }
+
+  function handleJoinGroup(tour: GroupTour) {
+    setSelectedCheckIn(tour.start_date);
+    setSelectedCheckOut(tour.end_date);
+  }
 
   if (!pkg) {
     return (
@@ -92,6 +108,22 @@ export default function InternationalTourDetailsPage() {
                 </button>
               ))}
             </div>
+
+            {/* Tab content panels */}
+            {activeTab === "Tour Calendar" && pkg.calendar && (
+              <CalendarView
+                calendarDates={pkg.calendar}
+                pkgTitle={pkg.title}
+                duration={pkg.duration}
+                onDateSelect={handleDateSelect}
+              />
+            )}
+            {activeTab === "Group Tours" && pkg.groupTours && (
+              <GroupTourList
+                groupTours={pkg.groupTours}
+                onJoinGroup={handleJoinGroup}
+              />
+            )}
 
             {/* Description */}
             <section className="mt-8 rounded-xl border border-border-soft p-5">
@@ -197,7 +229,11 @@ export default function InternationalTourDetailsPage() {
 
           {/* Right: Booking sidebar */}
           <div>
-            <BookingSidebar pkg={pkg} />
+            <BookingSidebar
+              pkg={pkg}
+              initialCheckIn={selectedCheckIn}
+              initialCheckOut={selectedCheckOut}
+            />
           </div>
         </div>
       </main>

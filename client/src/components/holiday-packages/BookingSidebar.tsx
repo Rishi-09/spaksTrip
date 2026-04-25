@@ -1,15 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { TourDetail } from "@/lib/mock/tourPackages";
 
 type Props = {
   pkg: TourDetail;
+  initialCheckIn?: string;
+  initialCheckOut?: string;
 };
 
-export default function BookingSidebar({ pkg }: Props) {
-  const [checkIn, setCheckIn] = useState("");
-  const [checkOut, setCheckOut] = useState("");
+export default function BookingSidebar({ pkg, initialCheckIn, initialCheckOut }: Props) {
+  const [checkIn, setCheckIn] = useState(initialCheckIn ?? "");
+  const [checkOut, setCheckOut] = useState(initialCheckOut ?? "");
+
+  useEffect(() => {
+    if (initialCheckIn !== undefined) setCheckIn(initialCheckIn);
+  }, [initialCheckIn]);
+
+  useEffect(() => {
+    if (initialCheckOut !== undefined) setCheckOut(initialCheckOut);
+  }, [initialCheckOut]);
   const [adults, setAdults] = useState("");
   const [children, setChildren] = useState("");
   const [tourTypeRoom, setTourTypeRoom] = useState("");

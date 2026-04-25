@@ -73,7 +73,12 @@ export default function InternationalTourPackagesPage() {
           image="/forest.jpg"
         />
         <section className="mx-auto max-w-7xl px-6 py-16">
-          <PackageFilteredGrid packages={PACKAGES} />
+          <PackageFilteredGrid
+            packages={PACKAGES.map((pkg, i) => ({
+              ...pkg,
+              href: `/international-tour-list/${i + 1}`,
+            }))}
+          />
         </section>
       </main>
       <Footer />
