@@ -1,6 +1,4 @@
 import {
-  generateFlights,
-  getFlightById,
   type FlightOffer,
   type FlightSearchInput,
   type CabinClass,
@@ -8,11 +6,15 @@ import {
 import { searchAirports, type Airport } from "@/lib/mock/airports";
 import { jitter, sleep } from "./delay";
 
+// TBO is the only data source for flights. Mock fallback removed per integration spec.
+// All calls go through Next.js /api/flights/* routes which proxy to the TBO B2B API
+// server-side (credentials never leave the server).
+
 export type SortBy = "price" | "duration" | "departure" | "arrival";
 
 export type FlightFilters = {
-  stops?: (0 | 1 | 2)[];           // allowed stop counts; empty = any
-  airlines?: string[];             // IATA codes; empty = any
+  stops?: (0 | 1 | 2)[];
+  airlines?: string[];
   departureWindows?: Array<"early" | "morning" | "afternoon" | "evening" | "night">;
   maxPrice?: number;
   refundableOnly?: boolean;
@@ -64,19 +66,36 @@ export function sortOffers(offers: FlightOffer[], by: SortBy): FlightOffer[] {
 export async function searchFlights(
   input: FlightSearchInput,
 ): Promise<{ offers: FlightOffer[]; minPrice: number; maxPrice: number }> {
-  await sleep(jitter(650));
-  const offers = generateFlights(input);
-  const minPrice = offers.reduce((m, o) => Math.min(m, o.basePrice), Infinity);
-  const maxPrice = offers.reduce((m, o) => Math.max(m, o.basePrice), 0);
-  return { offers, minPrice, maxPrice };
+  const res = await fetch("/api/flights/search", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+
+  let json: { success: boolean; data?: { offers: FlightOffer[]; minPrice: number; maxPrice: number }; error?: string };
+  try {
+    json = await res.json();
+  } catch {
+    throw new Error(`Flight search failed: HTTP ${res.status} (non-JSON response)`);
+  }
+
+  if (!res.ok || !json.success) {
+    throw new Error(json.error ?? `Flight search failed (HTTP ${res.status})`);
+  }
+  return json.data!;
 }
 
 export async function getFlight(id: string): Promise<FlightOffer | null> {
-  await sleep(jitter(350));
-  return getFlightById(id);
+  // In TBO, id === ResultIndex. FareQuote revalidates price and returns the latest offer.
+  const res = await fetch(`/api/flights/${encodeURIComponent(id)}/fare-quote`);
+  if (!res.ok) return null;
+  const json = await res.json().catch(() => null);
+  if (!json?.success) return null;
+  return json.data?.updatedOffer ?? null;
 }
 
 export async function searchAirportOptions(q: string): Promise<Airport[]> {
+  // Airport autocomplete uses local IATA data — TBO does not expose a faster lookup.
   await sleep(jitter(120, 60));
   return searchAirports(q, 12);
 }

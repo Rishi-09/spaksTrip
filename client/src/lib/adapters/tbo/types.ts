@@ -1,0 +1,461 @@
+// Raw TBO API response shapes — no business logic, pure mirrors of TBO JSON.
+// Cross-checked against http://apidoc.tektravels.com/flight/Search_jason.aspx and Auth_JSON.aspx
+
+// ─── Shared ──────────────────────────────────────────────────────────────────
+
+export interface TboStatus {
+  Code: number;
+  Description: string;
+}
+
+export interface TboError {
+  ErrorCode: number;
+  ErrorMessage: string;
+}
+
+// ─── Authentication ───────────────────────────────────────────────────────────
+
+export interface TboAuthRequest {
+  ClientId: string;
+  UserName: string;
+  Password: string;
+  EndUserIp: string;
+}
+
+// IMPORTANT: Per Auth_JSON.aspx, Status is a NUMBER (1=success), not an object
+export interface TboAuthResponse {
+  Status: number;
+  TokenId: string;
+  Error: TboError;
+  Member: {
+    FirstName: string;
+    LastName: string;
+    Email: string;
+    MemberId: number;
+    AgencyId: number;
+    LoginName: string;
+    LoginDetails: string;
+    isPrimaryAgent: boolean;
+  };
+}
+
+// ─── Flights ──────────────────────────────────────────────────────────────────
+
+export interface TboAirlineInfo {
+  AirlineCode: string;
+  AirlineName: string;
+  FlightNumber: string;
+  FareClass: string;
+  OperatingCarrier: string;
+}
+
+export interface TboAirportInfo {
+  AirportCode: string;
+  AirportName: string;
+  Terminal: string;
+  CityCode: string;
+  CityName: string;
+  CountryCode: string;
+  CountryName: string;
+}
+
+export interface TboSegmentGroup {
+  Baggage: string;         // e.g. "20 Kg"
+  CabinBaggage: string;    // e.g. "7 Kg"
+  CabinClass: number;      // 1=Economy, 2=PremEco, 3=Business, 4=First
+  SupplierFareClass: string;
+  TripIndicator: number;
+  SegmentIndicator: number;
+  Airline: TboAirlineInfo;
+  NoOfSeatAvailable: number;
+  Origin: {
+    Airport: TboAirportInfo;
+    DepTime: string;   // "2025-01-15T06:30:00"
+  };
+  Destination: {
+    Airport: TboAirportInfo;
+    ArrTime: string;
+  };
+  Duration: number;        // minutes
+  GroundTime: number;      // layover minutes before next segment
+  Mile: number;
+  StopOver: boolean;
+  StopPoint: string;
+  Craft: string;           // aircraft type e.g. "A320neo"
+  Remark: string;
+  IsETicketEligible: boolean;
+  FlightStatus: string;
+  Status: string;
+}
+
+export interface TboTaxBreakup {
+  key: string;
+  value: number;
+}
+
+// IMPORTANT: TBO returns PublishedFare and OfferedFare. There is NO TotalFare field.
+// - PublishedFare = gross airline price
+// - OfferedFare = price after agent commission/discount (this is what we charge customer)
+export interface TboFare {
+  Currency: string;
+  BaseFare: number;
+  Tax: number;
+  TaxBreakup: TboTaxBreakup[];
+  YQTax: number;
+  AdditionalTxnFeeOfrd: number;
+  AdditionalTxnFeePub: number;
+  PGCharge: number;
+  OtherCharges: number;
+  ChargeBU: Array<{
+    key: string;
+    value: number;
+  }>;
+  Discount: number;
+  PublishedFare: number;
+  CommissionEarned: number;
+  PLBEarned: number;
+  IncentiveEarned: number;
+  OfferedFare: number;
+  TdsOnCommission: number;
+  TdsOnPLB: number;
+  TdsOnIncentive: number;
+  ServiceFee: number;
+}
+
+export interface TboFareBreakdown {
+  Currency: string;
+  PassengerType: number;   // 1=ADT, 2=CHD, 3=INF
+  PassengerCount: number;
+  BaseFare: number;
+  Tax: number;
+  TaxBreakup: TboTaxBreakup[];
+  YQTax: number;
+  AdditionalTxnFeeOfrd: number;
+  AdditionalTxnFeePub: number;
+}
+
+export interface TboFareRule {
+  Origin: string;
+  Destination: string;
+  Airline: string;
+  FareBasis: string;
+  FareRuleDetail: string;    // raw text/HTML from TBO
+  FareRestriction: string;
+}
+
+export interface TboFareFamily {
+  FareFamilyCode: string;
+  FareFamilyName: string;
+  IsRefundable: boolean;
+  Baggage: string;
+  CabinBaggage: string;
+  MealDynamic: string | null;
+  SeatDynamic: string | null;
+}
+
+export interface TboFlightResult {
+  ResultIndex: string;          // opaque key — must be threaded through entire booking flow
+  Source: number;
+  IsLCC: boolean;
+  IsRefundable: boolean;
+  IsPanRequiredAtBook: boolean;
+  IsPanRequiredAtTicket: boolean;
+  IsPassportRequiredAtBook: boolean;
+  IsPassportRequiredAtTicket: boolean;
+  GSTINNo: string | null;
+  IsHoldAllowed: boolean;
+  IsAlPriceChangeAllowed: boolean;
+  TicketAdvisory: string;
+  LastTicketDate: string | null;
+  AirlineCode: string;
+  AirlineName: string;
+  Fare: TboFare;
+  FareBreakdown: TboFareBreakdown[];
+  Segments: TboSegmentGroup[][];  // outer = trip legs, inner = segments per leg
+  LastTicketingDate: string | null;
+  FareRules: TboFareRule[] | null;
+  AirlineRemark: string;
+  IsUpsellAvailable: boolean;
+  Availability: number;
+  FareFamilies: TboFareFamily[] | null;
+}
+
+export interface TboFlightSearchResponse {
+  Response: {
+    ResponseStatus: number;   // 1 = success
+    Error: TboError;
+    TraceId: string;
+    Origin: string;
+    Destination: string;
+    Results: TboFlightResult[][] | null;  // null when no results
+  };
+}
+
+// ─── FareQuote ────────────────────────────────────────────────────────────────
+
+export interface TboFareQuoteResponse {
+  Response: {
+    ResponseStatus: number;
+    Error: TboError;
+    TraceId: string;
+    Results: TboFlightResult | null;
+    IsPriceChanged: boolean;
+    IsTimeChanged: boolean;
+  };
+}
+
+// ─── FareRule ─────────────────────────────────────────────────────────────────
+
+export interface TboFareRuleResponse {
+  Response: {
+    ResponseStatus: number;
+    Error: TboError;
+    TraceId: string;
+    FareRules: TboFareRule[] | null;
+  };
+}
+
+// ─── SSR ─────────────────────────────────────────────────────────────────────
+
+export interface TboSSRDetail {
+  Code: string;
+  Description: string;
+  AirlineDescription: string;
+  Amount: number;
+}
+
+export interface TboSegmentSSRData {
+  SegmentIndex: number;
+  SSRDetails: TboSSRDetail[];
+}
+
+export interface TboSSRData {
+  key: string;  // passenger key
+  SegmentSSRDatas: TboSegmentSSRData[];
+}
+
+export interface TboSSRResponse {
+  Response: {
+    ResponseStatus: number;
+    Error: TboError;
+    TraceId: string;
+    SSRDatas: TboSSRData[] | null;
+  };
+}
+
+// ─── Book (Flight) ────────────────────────────────────────────────────────────
+
+export interface TboPassengerSSR {
+  Code: string;
+  Amount: number;
+  Description: string;
+  SegmentIndicator: number;
+}
+
+export interface TboPassengerRequest {
+  Title: string;         // "Mr", "Mrs", "Ms", "Mstr", "Miss"
+  FirstName: string;
+  LastName: string;
+  PaxType: number;       // 1=ADT, 2=CHD, 3=INF
+  DateOfBirth: string;   // "YYYY-MM-DDT00:00:00"
+  Gender: number;        // 1=Male, 2=Female
+  PassportNo: string;
+  PassportExpiry: string;
+  AddressLine1: string;
+  City: string;
+  CountryCode: string;
+  NationalityCode: string;
+  ContactNo: string;
+  Email: string;
+  IsLeadPax: boolean;
+  GSTCompanyAddress: string;
+  GSTCompanyContactNumber: string;
+  GSTCompanyName: string;
+  GSTNumber: string;
+  GSTCompanyEmail: string;
+  Fare: TboFare;
+  Baggage: TboPassengerSSR[];
+  MealDynamic: TboPassengerSSR[];
+  SeatDynamic: TboPassengerSSR[];
+}
+
+export interface TboPassengerResponse {
+  PaxId: number;
+  Title: string;
+  FirstName: string;
+  LastName: string;
+  PaxType: number;
+  DateOfBirth: string;
+  Gender: number;
+  PassportNo: string;
+  Ticket: {
+    TicketId: string;
+    TicketNumber: string;
+    IssueDate: string;
+    ValidatingAirline: string;
+    Fare: TboFare;
+    Status: string;
+  } | null;
+}
+
+export interface TboFlightItinerary {
+  BookingId: number;
+  PNR: string;
+  IsPriceChanged: boolean;
+  IsTimeChanged: boolean;
+  BookingStatus: number;
+  Passenger: TboPassengerResponse[];
+  Segments: TboSegmentGroup[][];
+  Fare: TboFare;
+}
+
+export interface TboFlightBookResponse {
+  Response: {
+    ResponseStatus: number;
+    Error: TboError;
+    TraceId: string;
+    FlightItinerary: TboFlightItinerary | null;
+  };
+}
+
+// ─── Ticket ───────────────────────────────────────────────────────────────────
+
+export interface TboTicketResponse {
+  Response: {
+    ResponseStatus: number;
+    Error: TboError;
+    TraceId: string;
+    FlightItinerary: {
+      BookingId: number;
+      PNR: string;
+      BookingStatus: number;
+      Passenger: TboPassengerResponse[];
+    } | null;
+  };
+}
+
+// ─── GetBookingDetail (Flight) ────────────────────────────────────────────────
+
+export interface TboFlightBookingDetailResponse {
+  Response: {
+    ResponseStatus: number;
+    Error: TboError;
+    TraceId: string;
+    FlightItinerary: TboFlightItinerary | null;
+  };
+}
+
+// ─── Hotels ───────────────────────────────────────────────────────────────────
+
+export interface TboHotelPrice {
+  CurrencyCode: string;
+  RoomPrice: number;
+  Tax: number;
+  ExtraGuestCharge: number;
+  ChildCharge: number;
+  OtherCharges: number;
+  Discount: number;
+  PublishedPrice: number;
+  PublishedPriceRoundedOff: number;
+  OfferedPrice: number;
+  OfferedPriceRoundedOff: number;
+  AgentCommission: number;
+  AgentMarkUp: number;
+}
+
+export interface TboRoomPrice {
+  CurrencyCode: string;
+  RoomPrice: number;
+  Tax: number;
+  TotalPrice: number;
+  OfferedPrice: number;
+  OfferedPriceRoundedOff: number;
+}
+
+export interface TboRoomDetail {
+  RoomTypeCode: string;
+  RoomTypeName: string;
+  RatePlanCode: string;
+  RatePlanName: string;
+  RatePlan: number;
+  Price: TboRoomPrice;
+  IsRefundable: boolean;
+  WithBreakfast: boolean;
+  LastCancellationDate: string;
+  CancellationPolicies: Array<{ Charge: number; ChargeType: number; FromDate: string; ToDate: string }>;
+  Supplements: string[];
+  InfoSource: string;
+  Inclusion: string[];
+}
+
+export interface TboHotelResult {
+  HotelCode: string;    // KEY for detail/book chaining
+  HotelName: string;
+  HotelRating: number;  // 1–5
+  HotelAddress: string;
+  Attractions: string;
+  HotelDescription: string;
+  Price: TboHotelPrice;
+  RoomDetails: TboRoomDetail[];
+  Images: string[];
+  Amenities: string[];
+  StarRating: number;
+  CityId: string;
+  HotelLocation: string;
+  HotelContactNo: string;
+  HotelMap: string;
+  HotelPolicy: string;
+  HotelFacilities: string[];
+}
+
+export interface TboHotelSearchResponse {
+  GetHotelResultResponse: {
+    ResponseStatus: number;
+    Error: TboError;
+    TraceId: string;
+    Status: string;
+    HotelResults: TboHotelResult[] | null;
+  };
+}
+
+// ─── Hotel Detail ─────────────────────────────────────────────────────────────
+
+export interface TboHotelDetailResponse {
+  GetHotelDetailsResponse: {
+    ResponseStatus: number;
+    Error: TboError;
+    TraceId: string;
+    HotelDetails: TboHotelResult | null;
+  };
+}
+
+// ─── Hotel Book ───────────────────────────────────────────────────────────────
+
+export interface TboHotelBookingDetail {
+  BookingId: string;
+  BookingStatus: string;
+  ConfirmationNumber: string;
+  HotelName: string;
+  CheckIn: string;
+  CheckOut: string;
+}
+
+export interface TboHotelBookResponse {
+  BookResult: {
+    ResponseStatus: number;
+    Error: TboError;
+    TraceId: string;
+    HotelBookingDetail: TboHotelBookingDetail | null;
+  };
+}
+
+// ─── Hotel GetBookingDetail ───────────────────────────────────────────────────
+
+export interface TboHotelBookingDetailResponse {
+  GetBookingDetailResult: {
+    ResponseStatus: number;
+    Error: TboError;
+    TraceId: string;
+    HotelBookingDetail: TboHotelBookingDetail | null;
+  };
+}
