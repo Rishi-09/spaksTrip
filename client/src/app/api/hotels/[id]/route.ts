@@ -1,0 +1,42 @@
+import { NextRequest, NextResponse } from "next/server";
+import { tboGetHotelDetail } from "@/lib/adapters/tbo/hotel/detail";
+
+function err(message: string, status: number) {
+  return NextResponse.json({ success: false, error: message }, { status });
+}
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await params;
+    if (!id) return err("hotel id (HotelCode) is required.", 400);
+
+    const sp = req.nextUrl.searchParams;
+    const checkIn = sp.get("checkIn") ?? "";
+    const checkOut = sp.get("checkOut") ?? "";
+    const rooms = parseInt(sp.get("rooms") ?? "1", 10);
+    const adults = parseInt(sp.get("adults") ?? "2", 10);
+    const children = parseInt(sp.get("children") ?? "0", 10);
+
+    if (!checkIn || !checkOut) {
+      return err("checkIn and checkOut query params are required.", 400);
+    }
+
+    const hotel = await tboGetHotelDetail(
+      decodeURIComponent(id),
+      checkIn,
+      checkOut,
+      adults,
+      children,
+      rooms,
+    );
+
+    if (!hotel) return err("Hotel not found.", 404);
+    return NextResponse.json({ success: true, data: hotel });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Hotel detail fetch failed";
+    return err(message, 500);
+  }
+}
