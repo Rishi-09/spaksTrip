@@ -6,6 +6,7 @@ import Logo from "./Logo";
 import { cn } from "@/lib/cn";
 import AuthModal from "@/components/auth/AuthModal";
 import { useAuthStore } from "@/state/authStore";
+import { useLocaleStore, useCountryLocale } from "@/state/localeStore";
 
 type NavItem = {
   label: string;
@@ -98,8 +99,6 @@ const COUNTRIES = [
   "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe",
 ];
 
-const CURRENCIES = ["INR", "USD"];
-
 const LANGUAGES = [
   "English", "Hindi", "Spanish", "French", "Chinese",
   "Arabic", "Bengali", "Portuguese", "Russian", "Urdu",
@@ -112,13 +111,15 @@ export default function Header() {
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [authTab, setAuthTab] = useState<"customer" | "agent">("customer");
-  const [country, setCountry] = useState("India");
-  const [currency, setCurrency] = useState("INR");
-  const [language, setLanguage] = useState("English");
   const [openDropdown, setOpenDropdown] = useState<OpenDropdown>(null);
   const utilityBarRef = useRef<HTMLDivElement>(null);
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
+  const country = useLocaleStore((s) => s.country);
+  const setCountry = useLocaleStore((s) => s.setCountry);
+  const language = useLocaleStore((s) => s.language);
+  const setLanguage = useLocaleStore((s) => s.setLanguage);
+  const { currency } = useCountryLocale();
 
   const toggleMobileSection = (label: string) => {
     setMobileExpanded((current) => (current === label ? null : label));
@@ -171,14 +172,9 @@ export default function Header() {
                 onToggle={() => toggleDropdown("country")}
               />
               <span className="text-white/30 select-none">|</span>
-              <SelectDropdown
-                label="Currency"
-                options={CURRENCIES}
-                value={currency}
-                onChange={setCurrency}
-                isOpen={openDropdown === "currency"}
-                onToggle={() => toggleDropdown("currency")}
-              />
+              <span className="text-white/85 whitespace-nowrap text-[13px]" aria-label={`Currency: ${currency}`}>
+                {currency}
+              </span>
               <span className="text-white/30 select-none">|</span>
               <SelectDropdown
                 label="Language"
@@ -285,7 +281,12 @@ export default function Header() {
           {/* Mobile selectors row */}
           <div className="grid grid-cols-3 gap-2 border-b border-border-soft/60 px-4 py-3 sm:px-6">
             <MobileSelect label="Country" options={COUNTRIES} value={country} onChange={setCountry} />
-            <MobileSelect label="Currency" options={CURRENCIES} value={currency} onChange={setCurrency} />
+            <label className="flex flex-col gap-0.5 min-w-0">
+              <span className="text-[10px] font-medium uppercase tracking-wide text-ink-soft">Currency</span>
+              <span className="w-full truncate rounded border border-border-soft bg-surface-muted px-2 py-1 text-[12px] text-ink">
+                {currency}
+              </span>
+            </label>
             <MobileSelect label="Language" options={LANGUAGES} value={language} onChange={setLanguage} />
           </div>
           <ul className="flex flex-col py-2">

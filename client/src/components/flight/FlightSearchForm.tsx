@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import Checkbox from "@/components/ui/Checkbox";
 import Button from "@/components/ui/Button";
 import DateRangePicker, { type DateRange } from "@/components/ui/DateRangePicker";
@@ -11,14 +11,74 @@ import PassengerSelector from "./PassengerSelector";
 import TripTypeTabs from "./TripTypeTabs";
 import { toIsoDate } from "@/lib/format";
 import { useToast } from "@/components/ui/Toast";
+import { cn } from "@/lib/cn";
 
 type Props = { variant?: "hero" | "inline" };
 
-const FARE_CATEGORIES: Array<{ value: FareCategory; label: string }> = [
-  { value: "regular", label: "Regular" },
-  { value: "student", label: "Student" },
-  { value: "armed_forces", label: "Armed Forces" },
-  { value: "senior_citizen", label: "Senior Citizen" },
+type FareCategoryOption = {
+  value: FareCategory;
+  label: string;
+  description: string;
+  icon: ReactNode;
+};
+
+const FareIconProps = {
+  width: 22,
+  height: 22,
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2,
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+  "aria-hidden": true,
+};
+
+const FARE_CATEGORIES: FareCategoryOption[] = [
+  {
+    value: "regular",
+    label: "Regular",
+    description: "Best mix of value and flexibility",
+    icon: (
+      <svg {...FareIconProps}>
+        <rect x="3" y="7" width="18" height="13" rx="2" />
+        <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+        <line x1="3" y1="13" x2="21" y2="13" />
+      </svg>
+    ),
+  },
+  {
+    value: "student",
+    label: "Student",
+    description: "Extra baggage & student benefits",
+    icon: (
+      <svg {...FareIconProps}>
+        <path d="M22 10 12 5 2 10l10 5 10-5z" />
+        <path d="M6 12v5a6 6 0 0 0 12 0v-5" />
+      </svg>
+    ),
+  },
+  {
+    value: "armed_forces",
+    label: "Armed Forces",
+    description: "Exclusive offers for forces",
+    icon: (
+      <svg {...FareIconProps}>
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      </svg>
+    ),
+  },
+  {
+    value: "senior_citizen",
+    label: "Senior Citizen",
+    description: "Special savings for seniors",
+    icon: (
+      <svg {...FareIconProps}>
+        <circle cx="12" cy="7" r="4" />
+        <path d="M5 22v-2a7 7 0 0 1 14 0v2" />
+      </svg>
+    ),
+  },
 ];
 
 export default function FlightSearchForm({ variant = "hero" }: Props) {
@@ -130,35 +190,72 @@ export default function FlightSearchForm({ variant = "hero" }: Props) {
         </div>
       </div>
 
-      {/* Row 2: Fare category chips */}
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <span className="text-[11px] font-semibold text-ink-muted uppercase tracking-wide">Fare type:</span>
-        {FARE_CATEGORIES.map((cat) => {
-          const active = fareCategory === cat.value;
-          return (
-            <button
-              key={cat.value}
-              type="button"
-              onClick={() => setFareCategory(cat.value)}
-              aria-pressed={active}
-              className={[
-                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[12px] font-semibold transition-colors",
-                active
-                  ? "border-brand-600 bg-brand-50 text-brand-700"
-                  : "border-border-soft bg-white text-ink-muted hover:border-brand-400 hover:text-ink",
-              ].join(" ")}
-            >
-              <span
-                className={[
-                  "inline-block h-2 w-2 rounded-full border",
-                  active ? "border-brand-600 bg-brand-600" : "border-ink-muted bg-white",
-                ].join(" ")}
-                aria-hidden
-              />
-              {cat.label}
-            </button>
-          );
-        })}
+      {/* Row 2: Fare type cards */}
+      <div className="mt-4">
+        <span className="text-[11px] font-semibold text-ink-muted uppercase tracking-wide">
+          Fare Type
+        </span>
+        <div className="mt-2 grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          {FARE_CATEGORIES.map((cat) => {
+            const active = fareCategory === cat.value;
+            return (
+              <button
+                key={cat.value}
+                type="button"
+                onClick={() => setFareCategory(cat.value)}
+                aria-pressed={active}
+                className={cn(
+                  "relative flex items-center gap-3 rounded-xl border p-3 text-left transition-colors",
+                  active
+                    ? "border-brand-500 bg-brand-50/40"
+                    : "border-border-soft bg-white hover:border-brand-300",
+                )}
+              >
+                <span
+                  className={cn(
+                    "grid h-11 w-11 shrink-0 place-items-center rounded-full",
+                    active ? "bg-brand-500 text-white" : "bg-surface-muted text-ink-muted",
+                  )}
+                  aria-hidden
+                >
+                  {cat.icon}
+                </span>
+                <div className="min-w-0 flex-1 pr-6">
+                  <div className="text-[14px] font-semibold text-ink leading-tight">
+                    {cat.label}
+                  </div>
+                  <div className="mt-0.5 text-[12px] text-ink-muted leading-snug">
+                    {cat.description}
+                  </div>
+                </div>
+                <span
+                  className={cn(
+                    "absolute top-2.5 right-2.5 grid h-5 w-5 place-items-center rounded-full border transition-colors",
+                    active
+                      ? "border-brand-500 bg-brand-500 text-white"
+                      : "border-border bg-white",
+                  )}
+                  aria-hidden
+                >
+                  {active && (
+                    <svg
+                      viewBox="0 0 24 24"
+                      width={12}
+                      height={12}
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={3}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  )}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {tripType !== "MULTI" ? (
@@ -288,7 +385,19 @@ export default function FlightSearchForm({ variant = "hero" }: Props) {
 
       <div className="mt-5 flex items-center justify-between gap-3">
         <PopularRoutes />
-        <Button onClick={onSearch} loading={submitting} size="xl" variant="accent" className="min-w-45">
+        <Button
+          onClick={onSearch}
+          loading={submitting}
+          size="xl"
+          variant="accent"
+          className="min-w-45"
+          leading={
+            <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <circle cx="11" cy="11" r="7" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          }
+        >
           Search Flights
         </Button>
       </div>

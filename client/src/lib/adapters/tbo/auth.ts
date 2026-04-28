@@ -27,8 +27,40 @@ function getBaseUrl(): string {
   return url.replace(/\/$/, "");
 }
 
-export function tboApiUrl(path: string): string {
-  return `${getBaseUrl()}/${path.replace(/^\//, "")}`;
+function normalizeTboHost(url: string, fallbackHost: string): string {
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname === "b2b.tektravels.com") {
+      parsed.hostname = fallbackHost;
+      return parsed.toString().replace(/\/$/, "");
+    }
+    return parsed.toString().replace(/\/$/, "");
+  } catch {
+    return url.replace(/\/$/, "");
+  }
+}
+
+function getServiceBaseUrl(
+  envKey: string,
+  fallbackHost: string,
+): string {
+  const explicit = process.env[envKey];
+  if (explicit) return explicit.replace(/\/$/, "");
+  return normalizeTboHost(getBaseUrl(), fallbackHost);
+}
+
+export function tboApiUrl(
+  path: string,
+  service: "shared" | "air" | "hotel" = "air",
+): string {
+  const cleanPath = path.replace(/^\//, "");
+  const baseUrl =
+    service === "shared"
+      ? getServiceBaseUrl("TBO_SHARED_API_URL", "sharedapi.tektravels.com")
+      : service === "hotel"
+        ? getServiceBaseUrl("TBO_HOTEL_API_URL", "api.tektravels.com")
+        : getServiceBaseUrl("TBO_AIR_API_URL", "api.tektravels.com");
+  return `${baseUrl}/${cleanPath}`;
 }
 
 // ─── Internal: call TBO authenticate endpoint ─────────────────────────────────
@@ -45,7 +77,7 @@ async function authenticate(): Promise<string> {
   }
 
   // Per TBO B2B docs: auth endpoint is /SharedServices/SharedData.svc/rest/Authenticate
-  const url = tboApiUrl("SharedServices/SharedData.svc/rest/Authenticate");
+  const url = tboApiUrl("SharedData.svc/rest/Authenticate", "shared");
   const body = {
     ClientId: "ApiIntegrationNew",
     UserName: userName,

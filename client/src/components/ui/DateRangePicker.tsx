@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/cn";
 
 export type DateRange = { from: Date | null; to: Date | null };
@@ -38,6 +39,8 @@ export function formatShort(d: Date | null) {
   return `${d.getDate()} ${MONTHS[d.getMonth()]}`;
 }
 
+type Coords = { top: number; left: number };
+
 export default function DateRangePicker({
   value,
   onChange,
@@ -50,17 +53,52 @@ export default function DateRangePicker({
   className,
 }: Props) {
   const [open, setOpen] = useState(false);
+  const [coords, setCoords] = useState<Coords | null>(null);
   const [viewMonth, setViewMonth] = useState<Date>(() => startOfMonth(value.from ?? new Date()));
   const [pickingTo, setPickingTo] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const panelId = useId();
+
+  // Compute viewport-relative coords for the fixed-position portal panel.
+  const computeCoords = useCallback((): Coords | null => {
+    const el = rootRef.current;
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    // Clamp left so the panel stays on-screen (panel is up to 640px wide).
+    const panelW = Math.min(640, window.innerWidth - 16);
+    const rawLeft = r.left;
+    const left = Math.max(8, Math.min(rawLeft, window.innerWidth - panelW - 8));
+    return { top: r.bottom + 6, left };
+  }, []);
 
   useEffect(() => {
-    const onDown = (e: MouseEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+    if (!open) return;
+    setCoords(computeCoords());
+
+    const onOutside = (e: MouseEvent) => {
+      const t = e.target as Node;
+      // Keep open when clicking inside the trigger wrapper OR inside the portal panel.
+      if (rootRef.current?.contains(t) || panelRef.current?.contains(t)) return;
+      setOpen(false);
     };
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
-  }, []);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    // Close on any scroll (simpler and expected UX for a fixed overlay).
+    const onDismiss = () => setOpen(false);
+
+    document.addEventListener("mousedown", onOutside);
+    document.addEventListener("keydown", onKey);
+    window.addEventListener("scroll", onDismiss, { capture: true, passive: true });
+    window.addEventListener("resize", onDismiss, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", onOutside);
+      document.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", onDismiss, { capture: true });
+      window.removeEventListener("resize", onDismiss);
+    };
+  }, [open, computeCoords]);
 
   const minStripped = minDate ? stripTime(minDate) : stripTime(new Date());
 
@@ -70,7 +108,7 @@ export default function DateRangePicker({
       setOpen(false);
       return;
     }
-    if (!value.from || (value.from && value.to) || pickingTo === false) {
+    if (!value.from || (value.from && value.to) || !pickingTo) {
       onChange({ from: d, to: null });
       setPickingTo(true);
       return;
@@ -84,17 +122,16 @@ export default function DateRangePicker({
     setOpen(false);
   };
 
-  const months = useMemo(() => [viewMonth, addMonths(viewMonth, 1)], [viewMonth]);
+  const months = [viewMonth, addMonths(viewMonth, 1)];
 
   return (
-    <div ref={rootRef} className={cn("relative", className)}>
+    <div ref={rootRef} className={cn("relative min-w-0", className)}>
       <button
         type="button"
-        onClick={() => {
-          setOpen((o) => !o);
-          setPickingTo(false);
-        }}
-        className="flex w-full gap-0 rounded-md border border-border bg-white h-14 items-center text-left hover:border-brand-400 transition-colors"
+        onClick={() => { setOpen((o) => !o); setPickingTo(false); }}
+        aria-expanded={open}
+        aria-controls={panelId}
+        className="flex w-full gap-0 rounded-xl border border-border bg-white h-14 items-center text-left hover:border-brand-500 shadow-sm transition-all"
       >
         <DateCell label={labelFrom} value={value.from} placeholder={placeholderFrom} />
         {mode === "range" && (
@@ -105,13 +142,20 @@ export default function DateRangePicker({
         )}
       </button>
 
-      {open && (
-        <div className="absolute z-50 mt-2 left-0 rounded-xl bg-white shadow-[var(--shadow-pop)] border border-border-soft p-4 animate-pop-in w-[640px] max-w-[calc(100vw-2rem)]">
-          <div className="flex items-center justify-between mb-3">
+      {open && coords && createPortal(
+        <div
+          ref={panelRef}
+          id={panelId}
+          role="dialog"
+          aria-modal="true"
+          style={{ position: "fixed", top: coords.top, left: coords.left, zIndex: 9999 }}
+          className="rounded-2xl border border-border-soft bg-white p-5 shadow-xl animate-pop-in w-[min(680px,calc(100vw-1rem))] max-h-[85vh] overflow-auto"
+        >
+          <div className="flex items-center justify-between mb-4 px-1">
             <button
               type="button"
               onClick={() => setViewMonth(addMonths(viewMonth, -1))}
-              className="grid h-8 w-8 place-items-center rounded-full hover:bg-surface-muted text-ink"
+              className="grid h-9 w-9 place-items-center rounded-full border border-border-soft bg-white hover:bg-brand-50 hover:text-brand-600 transition-all"
               aria-label="Previous month"
             >
               <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -121,7 +165,7 @@ export default function DateRangePicker({
             <button
               type="button"
               onClick={() => setViewMonth(addMonths(viewMonth, 1))}
-              className="grid h-8 w-8 place-items-center rounded-full hover:bg-surface-muted text-ink"
+              className="grid h-9 w-9 place-items-center rounded-full border border-border-soft bg-white hover:bg-brand-50 hover:text-brand-600 transition-all"
               aria-label="Next month"
             >
               <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -129,7 +173,7 @@ export default function DateRangePicker({
               </svg>
             </button>
           </div>
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             {months.map((m) => (
               <Month
                 key={m.toISOString()}
@@ -141,21 +185,19 @@ export default function DateRangePicker({
             ))}
           </div>
           {mode === "range" && (
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-border-soft text-[12px] text-ink-muted">
+            <div className="flex items-center justify-between mt-4 pt-3 border-t border-border-soft text-[12px] text-ink-muted">
               <span>Click departure then return date</span>
               <button
                 type="button"
-                onClick={() => {
-                  onChange({ from: null, to: null });
-                  setPickingTo(false);
-                }}
+                onClick={() => { onChange({ from: null, to: null }); setPickingTo(false); }}
                 className="font-semibold text-brand-700 hover:underline"
               >
                 Clear
               </button>
             </div>
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -172,7 +214,7 @@ function DateCell({
 }) {
   return (
     <div className="flex-1 min-w-0 px-4">
-      <div className="text-[11px] font-medium text-ink-muted">{label}</div>
+      <div className="text-[11px] tracking-wide uppercase font-medium text-ink-muted">{label}</div>
       <div className="text-[15px] font-semibold text-ink truncate">
         {value ? formatDate(value) : <span className="text-ink-subtle">{placeholder}</span>}
       </div>
@@ -201,12 +243,12 @@ function Month({
 
   return (
     <div>
-      <div className="text-center text-[14px] font-semibold text-ink mb-2">
+      <div className="text-center text-[15px] tracking-wide font-semibold text-ink mb-2">
         {MONTHS_FULL[month]} {year}
       </div>
-      <div className="grid grid-cols-7 gap-1">
+      <div className="grid grid-cols-7 gap-1.5">
         {DOW.map((d, i) => (
-          <div key={i} className="h-7 grid place-items-center text-[11px] font-semibold text-ink-subtle">
+          <div key={i} className="h-7 grid place-items-center text-[11px] tracking-wide uppercase font-semibold text-ink-subtle">
             {d}
           </div>
         ))}
@@ -223,12 +265,23 @@ function Month({
               disabled={disabled}
               onClick={() => onPick(d)}
               className={cn(
-                "h-8 w-full rounded-md text-[13px] font-medium transition-colors",
-                disabled && "text-ink-subtle cursor-not-allowed",
-                !disabled && !inRange && "hover:bg-surface-muted text-ink",
-                inRange && !(isFrom || isTo) && "bg-brand-50 text-brand-700",
-                (isFrom || isTo) && "bg-brand-600 text-white",
-              )}
+  "h-9 w-full rounded-full text-[13px] font-semibold transition-all duration-150",
+  "flex items-center justify-center",
+
+  disabled && "text-ink-subtle cursor-not-allowed",
+
+  !disabled && !inRange && "hover:bg-brand-50 text-ink",
+
+  inRange && !(isFrom || isTo) && "bg-brand-100 text-brand-700",
+
+  (isFrom || isTo) &&
+    "bg-brand-600 text-white shadow-md scale-105",
+
+  (isFrom || isTo) && "rounded-full",
+
+  // smooth range connection effect
+  inRange && "relative z-0"
+)}
             >
               {d.getDate()}
             </button>
