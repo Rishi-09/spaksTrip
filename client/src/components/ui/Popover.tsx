@@ -1,13 +1,14 @@
 "use client";
 
 import {
+  useCallback,
   useEffect,
   useId,
-  useLayoutEffect,
   useRef,
   useState,
   type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/cn";
 
 type Props = {
@@ -28,7 +29,7 @@ export default function Popover({
   offset = 8,
 }: Props) {
   const [open, setOpen] = useState(false);
-  const [pos, setPos] = useState<{ top: number; left: number; width: number } | null>(null);
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const id = useId();
@@ -36,62 +37,75 @@ export default function Popover({
   const toggle = () => setOpen((v) => !v);
   const close = () => setOpen(false);
 
-  useLayoutEffect(() => {
-    if (!open || !triggerRef.current) return;
-    const r = triggerRef.current.getBoundingClientRect();
-    const panel = panelRef.current;
-    const panelW = panel?.offsetWidth ?? 0;
-    const left =
-      placement === "bottom-end"
-        ? r.right + window.scrollX - panelW
-        : placement === "bottom-center"
-          ? r.left + window.scrollX + r.width / 2 - panelW / 2
-          : r.left + window.scrollX;
-    setPos({ top: r.bottom + window.scrollY + offset, left, width: r.width });
-  }, [open, placement, offset]);
+  const computeCoords = useCallback(() => {
+    const el = triggerRef.current;
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    let left: number;
+    if (placement === "bottom-end") {
+      left = r.right - (panelRef.current?.offsetWidth ?? 240);
+    } else if (placement === "bottom-center") {
+      left = r.left + r.width / 2 - (panelRef.current?.offsetWidth ?? 240) / 2;
+    } else {
+      left = r.left;
+    }
+    // Keep panel on-screen.
+    const panelW = panelRef.current?.offsetWidth ?? 240;
+    left = Math.max(8, Math.min(left, window.innerWidth - panelW - 8));
+    return { top: r.bottom + offset, left };
+  }, [placement, offset]);
 
   useEffect(() => {
     if (!open) return;
-    const onDown = (e: MouseEvent) => {
-      if (
-        panelRef.current?.contains(e.target as Node) ||
-        triggerRef.current?.contains(e.target as Node)
-      )
-        return;
+    // Recompute after panel renders so offsetWidth is available.
+    const frame = requestAnimationFrame(() => setCoords(computeCoords()));
+
+    const onOutside = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (triggerRef.current?.contains(t) || panelRef.current?.contains(t)) return;
       close();
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") close();
     };
-    document.addEventListener("mousedown", onDown);
+    const onDismiss = () => close();
+
+    document.addEventListener("mousedown", onOutside);
     document.addEventListener("keydown", onKey);
+    window.addEventListener("scroll", onDismiss, { capture: true, passive: true });
+    window.addEventListener("resize", onDismiss, { passive: true });
     return () => {
-      document.removeEventListener("mousedown", onDown);
+      cancelAnimationFrame(frame);
+      document.removeEventListener("mousedown", onOutside);
       document.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", onDismiss, { capture: true });
+      window.removeEventListener("resize", onDismiss);
     };
-  }, [open]);
+  }, [open, computeCoords]);
 
   return (
-    <div className={cn("relative inline-block", className)}>
+    <div className={cn("relative", className)}>
       {trigger({ open, toggle, ref: triggerRef })}
-      {open && (
+      {open && createPortal(
         <div
           ref={panelRef}
           id={id}
           role="dialog"
+          aria-modal="true"
           style={{
-            position: "absolute",
-            top: pos ? pos.top - (triggerRef.current?.getBoundingClientRect().bottom ?? 0) - window.scrollY + offset : offset,
-            left: 0,
-            ...(placement === "bottom-end" ? { right: 0, left: "auto" } : {}),
+            position: "fixed",
+            top: coords?.top ?? -9999,
+            left: coords?.left ?? -9999,
+            zIndex: 9999,
           }}
           className={cn(
-            "z-50 min-w-[220px] rounded-lg bg-white shadow-[var(--shadow-pop)] border border-border-soft animate-pop-in",
+            "min-w-[220px] rounded-lg bg-white shadow-[var(--shadow-pop)] border border-border-soft animate-pop-in",
             panelClassName,
           )}
         >
           {children({ close })}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

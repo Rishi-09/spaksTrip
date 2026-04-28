@@ -1,3 +1,11 @@
+export function formatCurrency(n: number, locale: string, currency: string): string {
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency,
+    maximumFractionDigits: 0,
+  }).format(n);
+}
+
 export function formatINR(n: number): string {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
