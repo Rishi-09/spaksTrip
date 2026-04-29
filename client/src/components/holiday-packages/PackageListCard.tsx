@@ -9,7 +9,6 @@ export default function PackageListCard({ pkg }: Props) {
   const detailsHref = `/${pkg.categoryType}-tour-details/${pkg.id}`;
 
   return (
-    {/* Stack image above content on small screens to prevent horizontal overflow */}
     <article className="flex flex-col md:flex-row gap-4 rounded-xl border border-border-soft bg-white shadow-sm overflow-hidden">
       {/* Image */}
       <div className="w-full md:w-[260px] shrink-0 overflow-hidden">

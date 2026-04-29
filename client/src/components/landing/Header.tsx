@@ -16,6 +16,13 @@ type NavItem = {
   menu?: { labelKey: string; href: string }[];
 };
 
+// Hydration-safe aria-label normalization:
+// Some i18n labels can include zero-width characters that differ between SSR and client.
+// Strip them so `aria-label` props are identical across hydration.
+function normalizeAriaText(input: string) {
+  return input.replace(/[\u200B-\u200D\uFEFF]/g, "");
+}
+
 const NAV_ITEMS: NavItem[] = [
   { labelKey: "nav.flight", href: "/flight" },
   { labelKey: "nav.hotel", href: "/hotel" },
@@ -247,9 +254,11 @@ export default function Header() {
 
       {/* Main nav */}
       <div className="border-b border-border-soft">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6">
+        {/* CHANGE: grid layout to keep Logo left and Navigation centered (hamburger stays right) */}
+        <div className="mx-auto st-header-main-nav-inner max-w-7xl px-4 py-3.5 sm:px-6">
           <Logo />
-          <nav className="hidden md:block">
+          {/* CHANGE: centered alignment within the grid */}
+          <nav className="hidden lg:block justify-self-center">
             <ul className="flex items-center gap-7 text-[14px] font-semibold text-ink">
               {NAV_ITEMS.map((item) => (
                 <li key={item.labelKey} className="group/nav relative">
@@ -290,7 +299,7 @@ export default function Header() {
                 return next;
               });
             }}
-            className="md:hidden grid h-10 w-10 place-items-center rounded-md text-ink hover:bg-surface-muted"
+            className="lg:hidden grid h-10 w-10 place-items-center rounded-md text-ink hover:bg-surface-muted justify-self-end"
           >
             <svg viewBox="0 0 24 24" width={20} height={20} fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" aria-hidden>
               {mobileOpen ? (
@@ -313,7 +322,7 @@ export default function Header() {
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} defaultTab={authTab} />
 
       {mobileOpen && (
-        <nav className="md:hidden border-b border-border-soft bg-white max-h-[70vh] overflow-y-auto scrollbar-thin">
+        <nav className="lg:hidden border-b border-border-soft bg-white max-h-[70vh] overflow-y-auto scrollbar-thin">
           {/* Mobile selectors row */}
           <div className="grid grid-cols-3 gap-2 border-b border-border-soft/60 px-4 py-3 sm:px-6">
             <MobileSelect label={t("header.country")} options={COUNTRIES.map((c) => ({ value: c, label: c }))} value={country} onChange={setCountry} showFlag />
@@ -421,7 +430,7 @@ function SelectDropdown({
         type="button"
         onClick={onToggle}
         aria-expanded={isOpen}
-        aria-label={`${label}: ${selectedLabel}`}
+        aria-label={`${normalizeAriaText(label)}: ${normalizeAriaText(selectedLabel)}`}
         className="flex items-center gap-1 text-white/85 hover:text-white transition-colors whitespace-nowrap"
       >
         {selectedFlagUrl ? (
@@ -454,7 +463,7 @@ function SelectDropdown({
       {isOpen && (
         <div
           role="listbox"
-          aria-label={label}
+          aria-label={normalizeAriaText(label)}
           className="absolute left-0 top-[calc(100%+8px)] z-50 min-w-[10rem] max-h-60 overflow-y-auto rounded-lg bg-white border border-border-soft shadow-(--shadow-pop) py-1"
         >
           {options.map((opt) => (
@@ -581,7 +590,7 @@ function CurrencyDropdown({
         type="button"
         onClick={onToggle}
         aria-expanded={isOpen}
-        aria-label={`${ariaLabel}: ${selected.value}`}
+        aria-label={`${normalizeAriaText(ariaLabel)}: ${normalizeAriaText(selected.value)}`}
         className="flex items-center gap-1 text-white/85 hover:text-white transition-colors whitespace-nowrap"
       >
         <span className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-white/40 text-[11px] font-semibold leading-none">
@@ -607,7 +616,7 @@ function CurrencyDropdown({
       {isOpen && (
         <div
           role="listbox"
-          aria-label={ariaLabel}
+          aria-label={normalizeAriaText(ariaLabel)}
           className="absolute left-0 top-[calc(100%+8px)] z-50 min-w-[8rem] overflow-hidden rounded-lg bg-white border border-border-soft shadow-(--shadow-pop) py-1"
         >
           {CURRENCY_OPTIONS.map((option) => (
