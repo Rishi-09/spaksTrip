@@ -1,37 +1,41 @@
+"use client";
+
+import { useTranslate } from "@tolgee/react";
 import SectionHeading from "./SectionHeading";
 
 type Feature = {
-  title: string;
+  titleKey: string;
   icon: React.ReactNode;
 };
 
 const FEATURES: Feature[] = [
-  { title: "Best Review", icon: <ThumbsUpIcon /> },
-  { title: "No Cost EMI Facility", icon: <DiscountIcon /> },
-  { title: "Premium Tours", icon: <GlobeIcon /> },
-  { title: "Verified Drivers", icon: <DriverIcon /> },
-  { title: "Verified Hotels", icon: <HotelIcon /> },
-  { title: "Well Planned Itineraries", icon: <RouteIcon /> },
-  { title: "Lowest Price Challenges", icon: <PriceIcon /> },
-  { title: "24*7 Call & WhatsApp Support", icon: <SupportIcon /> },
+  { titleKey: "landing.best_review", icon: <ThumbsUpIcon /> },
+  { titleKey: "landing.no_cost_emi", icon: <DiscountIcon /> },
+  { titleKey: "landing.premium_tours", icon: <GlobeIcon /> },
+  { titleKey: "landing.verified_drivers", icon: <DriverIcon /> },
+  { titleKey: "landing.verified_hotels", icon: <HotelIcon /> },
+  { titleKey: "landing.well_planned", icon: <RouteIcon /> },
+  { titleKey: "landing.lowest_price", icon: <PriceIcon /> },
+  { titleKey: "landing.support_24_7", icon: <SupportIcon /> },
 ];
 
 export default function WhyChooseUs() {
+  const { t } = useTranslate();
   return (
     <section className="bg-[#F4F6F9] py-20">
       <div className="mx-auto max-w-7xl px-6">
-        <SectionHeading title="Why Choose Us" />
+        <SectionHeading title={t("landing.why_choose")} />
 
         <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {FEATURES.map((f) => (
             <article
-              key={f.title}
+              key={f.titleKey}
               className="flex flex-col items-center justify-center gap-5 rounded-2xl bg-white px-6 py-10 text-center shadow-sm ring-1 ring-black/[0.03] hover:-translate-y-1 hover:shadow-lg transition"
             >
               <div aria-hidden="true" className="grid h-20 w-20 place-items-center">
                 {f.icon}
               </div>
-              <h3 className="text-base font-bold text-[#0E1E3A]">{f.title}</h3>
+              <h3 className="text-base font-bold text-[#0E1E3A]">{t(f.titleKey)}</h3>
             </article>
           ))}
         </div>
