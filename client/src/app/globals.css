@@ -182,3 +182,17 @@ body {
   background-size: 200% 100%;
   animation: st-shimmer 1.2s linear infinite;
 }
+
+/* Header layout helpers (Compact Top Bar + Clean Main Navigation) */
+.st-header-main-nav-inner {
+  display: grid;
+  grid-template-columns: auto 1fr auto; /* Logo left, nav center, hamburger right */
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .st-header-main-nav-inner {
+    /* Keep nav centered on tablet+ as the desktop menu appears */
+    grid-template-columns: auto 1fr auto;
+  }
+}
