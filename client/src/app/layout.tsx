@@ -18,6 +18,10 @@ export const metadata: Metadata = {
   title: "SpaksTrip — Flights, Hotels, Holidays & More",
   description:
     "Book flights, hotels, holiday packages, visas and more. Powered by SpaksTrip.",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+  },
 };
 
 export default function RootLayout({

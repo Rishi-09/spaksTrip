@@ -27,7 +27,7 @@ export default function PassengerSelector({
 
   return (
     <Popover
-      panelClassName="p-4 w-[340px]"
+      panelClassName="p-4 w-[340px] max-w-[92vw]"
       trigger={({ toggle, ref }) => (
         <button
           type="button"

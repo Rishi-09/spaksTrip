@@ -27,7 +27,7 @@ export default function PRVisaContent() {
   return (
     <section className="bg-white py-12">
       <div className="mx-auto max-w-7xl px-6">
-        <div className="flex gap-8 items-start">
+        <div className="flex flex-col md:flex-row gap-8 items-start">
           {/* ── Left article ── */}
           <div className="flex-1 min-w-0">
             <div className="rounded-xl border border-zinc-200 overflow-hidden p-6">
