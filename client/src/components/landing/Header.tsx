@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import Logo from "./Logo";
 import { cn } from "@/lib/cn";
-import AuthModal from "@/components/auth/AuthModal";
+import RoleGate from "@/components/auth/RoleGate";
 import { useAuthStore } from "@/state/authStore";
 import { useLocaleStore, useCountryLocale } from "@/state/localeStore";
 
@@ -17,7 +18,7 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { label: "Flight", href: "/flight" },
   { label: "Hotel", href: "/hotel" },
-    {
+  {
     label: "Train",
     href: "#",
     menu: [
@@ -25,7 +26,6 @@ const NAV_ITEMS: NavItem[] = [
       { label: "Tickets", href: "/tickets" },
       { label: "Change Request", href: "/change-request" },
       { label: "File TDR Online", href: "/file-tdr-online" },
-      
     ],
   },
   {
@@ -40,7 +40,6 @@ const NAV_ITEMS: NavItem[] = [
     label: "Accommodation",
     href: "#",
     menu: [
-      
       { label: "Homestay", href: "#" },
       { label: "Airbnb", href: "#" },
       { label: "Villa", href: "#" },
@@ -58,7 +57,6 @@ const NAV_ITEMS: NavItem[] = [
       { label: "Cabs", href: "/cabs" },
       { label: "Tour Bus", href: "/tour-bus" },
       { label: "Train", href: "/train" },
-      
     ],
   },
   { label: "Cruise", href: "/cruise" },
@@ -104,21 +102,20 @@ const LANGUAGES = [
   "Arabic", "Bengali", "Portuguese", "Russian", "Urdu",
 ];
 
-type OpenDropdown = "country" | "currency" | "language" | null;
+type OpenDropdown = "country" | "language" | "user" | null;
 
 export default function Header() {
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
-  const [authOpen, setAuthOpen] = useState(false);
-  const [authTab, setAuthTab] = useState<"customer" | "agent">("customer");
   const [openDropdown, setOpenDropdown] = useState<OpenDropdown>(null);
   const utilityBarRef = useRef<HTMLDivElement>(null);
-  const user = useAuthStore((s) => s.user);
-  const logout = useAuthStore((s) => s.logout);
-  const country = useLocaleStore((s) => s.country);
-  const setCountry = useLocaleStore((s) => s.setCountry);
-  const language = useLocaleStore((s) => s.language);
-  const setLanguage = useLocaleStore((s) => s.setLanguage);
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
+  const country = useLocaleStore((state) => state.country);
+  const setCountry = useLocaleStore((state) => state.setCountry);
+  const language = useLocaleStore((state) => state.language);
+  const setLanguage = useLocaleStore((state) => state.setLanguage);
   const { currency } = useCountryLocale();
 
   const toggleMobileSection = (label: string) => {
@@ -131,20 +128,25 @@ export default function Header() {
   );
 
   useEffect(() => {
-    function handleOutside(e: MouseEvent) {
-      if (utilityBarRef.current && !utilityBarRef.current.contains(e.target as Node)) {
+    function handleOutside(event: MouseEvent) {
+      if (utilityBarRef.current && !utilityBarRef.current.contains(event.target as Node)) {
         setOpenDropdown(null);
       }
     }
+
     if (openDropdown) {
       document.addEventListener("mousedown", handleOutside);
     }
+
     return () => document.removeEventListener("mousedown", handleOutside);
   }, [openDropdown]);
 
+  const profileHref = user?.role === "partner" ? "/partner/dashboard" : "/my-trips";
+
   return (
     <header className="sticky top-0 z-40 w-full bg-white shadow-(--shadow-xs)">
-      {/* Top utility bar */}
+      <RoleGate />
+
       <div className="bg-brand-900 text-white text-[13px]">
         <div
           ref={utilityBarRef}
@@ -152,7 +154,7 @@ export default function Header() {
         >
           <a
             href="tel:+919220328072"
-            className="flex items-center gap-2 text-white/85 hover:text-white transition-colors"
+            className="flex items-center gap-2 text-white/85 transition-colors hover:text-white"
           >
             <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" aria-hidden>
               <path d="M6.6 10.8c1.5 2.9 3.7 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.4.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.5 21 3 13.5 3 4.5c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1l-2.3 1.7z" />
@@ -160,8 +162,7 @@ export default function Header() {
             +91 922 032 8072
           </a>
 
-          <div className="hidden sm:flex items-center gap-3">
-            {/* Country / Currency / Language selectors */}
+          <div className="hidden items-center gap-3 sm:flex">
             <div className="flex items-center gap-3 border-r border-white/20 pr-3">
               <SelectDropdown
                 label="Country"
@@ -172,7 +173,7 @@ export default function Header() {
                 onToggle={() => toggleDropdown("country")}
               />
               <span className="text-white/30 select-none">|</span>
-              <span className="text-white/85 whitespace-nowrap text-[13px]" aria-label={`Currency: ${currency}`}>
+              <span className="whitespace-nowrap text-[13px] text-white/85" aria-label={`Currency: ${currency}`}>
                 {currency}
               </span>
               <span className="text-white/30 select-none">|</span>
@@ -186,30 +187,66 @@ export default function Header() {
               />
             </div>
 
-            {/* Login / user actions */}
             {user ? (
-              <div className="flex items-center gap-2">
-                <Link href="/my-trips" className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-white/85 hover:text-white text-[12px] font-semibold transition-colors">
-                  My Trips
-                </Link>
-                <span className="text-white/50">·</span>
-                <span className="text-[12px] text-white/85">{user.name}</span>
-                <button type="button" onClick={logout} className="inline-flex items-center gap-1.5 rounded-full border border-white/30 px-3 py-1.5 text-white/85 hover:text-white text-[12px] font-semibold transition-colors">
-                  Sign Out
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => toggleDropdown("user")}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/20 px-3 py-1.5 text-[12px] font-semibold text-white/90 transition-colors hover:bg-white/8 hover:text-white"
+                >
+                  <span>{user.displayName}</span>
+                  <svg
+                    viewBox="0 0 24 24"
+                    width={12}
+                    height={12}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2.4}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden
+                    className={cn("transition-transform", openDropdown === "user" && "rotate-180")}
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
                 </button>
+
+                {openDropdown === "user" ? (
+                  <div className="absolute right-0 top-[calc(100%+8px)] z-50 min-w-[13rem] rounded-xl border border-border-soft bg-white p-2 text-ink shadow-(--shadow-pop)">
+                    <div className="border-b border-border-soft px-3 py-2">
+                      <p className="text-[13px] font-semibold text-ink">{user.displayName}</p>
+                      <p className="text-[12px] text-ink-muted">{user.email}</p>
+                    </div>
+                    <div className="pt-2">
+                      <Link
+                        href={profileHref}
+                        className="block rounded-lg px-3 py-2 text-[13px] font-medium text-ink hover:bg-surface-muted"
+                        onClick={() => setOpenDropdown(null)}
+                      >
+                        Profile
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setOpenDropdown(null);
+                          await logout();
+                          router.replace("/");
+                        }}
+                        className="block w-full rounded-lg px-3 py-2 text-left text-[13px] font-medium text-ink hover:bg-surface-muted"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             ) : (
-              <div className="flex items-center gap-2">
-                <LoginPill tone="accent" label="Customer Login" onClick={() => { setAuthTab("customer"); setAuthOpen(true); }} />
-                <LoginPill tone="info" label="Partner Login" href="/partner-login" />
-                <LoginPill tone="brand" label="Agent Login" onClick={() => { setAuthTab("agent"); setAuthOpen(true); }} />
-              </div>
+              <LoginPill label="Login / Register" href="/auth" />
             )}
           </div>
         </div>
       </div>
 
-      {/* Main nav */}
       <div className="border-b border-border-soft">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6">
           <Logo />
@@ -248,13 +285,13 @@ export default function Header() {
             type="button"
             aria-label="Toggle menu"
             onClick={() => {
-              setMobileOpen((v) => {
-                const next = !v;
+              setMobileOpen((value) => {
+                const next = !value;
                 if (!next) setMobileExpanded(null);
                 return next;
               });
             }}
-            className="lg:hidden grid h-10 w-10 place-items-center rounded-md text-ink hover:bg-surface-muted"
+            className="grid h-10 w-10 place-items-center rounded-md text-ink hover:bg-surface-muted lg:hidden"
           >
             <svg viewBox="0 0 24 24" width={20} height={20} fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" aria-hidden>
               {mobileOpen ? (
@@ -274,14 +311,11 @@ export default function Header() {
         </div>
       </div>
 
-      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} defaultTab={authTab} />
-
-      {mobileOpen && (
-        <nav className="lg:hidden border-b border-border-soft bg-white max-h-[70vh] overflow-y-auto scrollbar-thin">
-          {/* Mobile selectors row */}
+      {mobileOpen ? (
+        <nav className="max-h-[70vh] overflow-y-auto border-b border-border-soft bg-white scrollbar-thin lg:hidden">
           <div className="grid grid-cols-3 gap-2 border-b border-border-soft/60 px-4 py-3 sm:px-6">
             <MobileSelect label="Country" options={COUNTRIES} value={country} onChange={setCountry} />
-            <label className="flex flex-col gap-0.5 min-w-0">
+            <label className="flex min-w-0 flex-col gap-0.5">
               <span className="text-[10px] font-medium uppercase tracking-wide text-ink-soft">Currency</span>
               <span className="w-full truncate rounded border border-border-soft bg-surface-muted px-2 py-1 text-[12px] text-ink">
                 {currency}
@@ -289,6 +323,7 @@ export default function Header() {
             </label>
             <MobileSelect label="Language" options={LANGUAGES} value={language} onChange={setLanguage} />
           </div>
+
           <ul className="flex flex-col py-2">
             {NAV_ITEMS.map((item) => (
               <li key={item.label}>
@@ -312,10 +347,7 @@ export default function Header() {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         aria-hidden
-                        className={cn(
-                          "transition-transform",
-                          mobileExpanded === item.label && "rotate-180",
-                        )}
+                        className={cn("transition-transform", mobileExpanded === item.label && "rotate-180")}
                       >
                         <polyline points="6 9 12 15 18 9" />
                       </svg>
@@ -332,17 +364,17 @@ export default function Header() {
                 )}
                 {item.menu && mobileExpanded === item.label ? (
                   <ul className="bg-surface-muted">
-                    {item.menu.map((m) => (
-                      <li key={m.label}>
+                    {item.menu.map((menuItem) => (
+                      <li key={menuItem.label}>
                         <Link
-                          href={m.href}
+                          href={menuItem.href}
                           className="block px-8 py-2.5 text-[13px] text-ink-soft hover:text-brand-700 sm:px-10"
                           onClick={() => {
                             setMobileOpen(false);
                             setMobileExpanded(null);
                           }}
                         >
-                          {m.label}
+                          {menuItem.label}
                         </Link>
                       </li>
                     ))}
@@ -351,8 +383,41 @@ export default function Header() {
               </li>
             ))}
           </ul>
+
+          <div className="border-t border-border-soft/60 px-4 py-4 sm:px-6">
+            {user ? (
+              <div className="flex flex-col gap-2">
+                <Link
+                  href={profileHref}
+                  className="rounded-lg border border-border-soft px-4 py-3 text-[14px] font-semibold text-ink"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Profile
+                </Link>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setMobileOpen(false);
+                    await logout();
+                    router.replace("/");
+                  }}
+                  className="rounded-lg bg-brand-600 px-4 py-3 text-left text-[14px] font-semibold text-white"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/auth"
+                className="block rounded-lg bg-brand-600 px-4 py-3 text-center text-[14px] font-semibold text-white"
+                onClick={() => setMobileOpen(false)}
+              >
+                Login / Register
+              </Link>
+            )}
+          </div>
         </nav>
-      )}
+      ) : null}
     </header>
   );
 }
@@ -368,7 +433,7 @@ function SelectDropdown({
   label: string;
   options: string[];
   value: string;
-  onChange: (v: string) => void;
+  onChange: (value: string) => void;
   isOpen: boolean;
   onToggle: () => void;
 }) {
@@ -379,7 +444,7 @@ function SelectDropdown({
         onClick={onToggle}
         aria-expanded={isOpen}
         aria-label={`${label}: ${value}`}
-        className="flex items-center gap-1 text-white/85 hover:text-white transition-colors whitespace-nowrap"
+        className="flex items-center gap-1 whitespace-nowrap text-white/85 transition-colors hover:text-white"
       >
         <span>{value}</span>
         <svg
@@ -398,29 +463,32 @@ function SelectDropdown({
         </svg>
       </button>
 
-      {isOpen && (
+      {isOpen ? (
         <div
           role="listbox"
           aria-label={label}
-          className="absolute left-0 top-[calc(100%+8px)] z-50 min-w-[10rem] max-h-60 overflow-y-auto rounded-lg bg-white border border-border-soft shadow-(--shadow-pop) py-1"
+          className="absolute left-0 top-[calc(100%+8px)] z-50 max-h-60 min-w-[10rem] overflow-y-auto rounded-lg border border-border-soft bg-white py-1 shadow-(--shadow-pop)"
         >
-          {options.map((opt) => (
+          {options.map((option) => (
             <button
-              key={opt}
+              key={option}
               type="button"
               role="option"
-              aria-selected={value === opt}
-              onClick={() => { onChange(opt); onToggle(); }}
+              aria-selected={value === option}
+              onClick={() => {
+                onChange(option);
+                onToggle();
+              }}
               className={cn(
-                "w-full text-left px-3 py-2 text-[13px] text-ink hover:bg-brand-50 hover:text-brand-700 transition-colors",
-                value === opt && "bg-brand-50 text-brand-700 font-semibold",
+                "w-full px-3 py-2 text-left text-[13px] text-ink transition-colors hover:bg-brand-50 hover:text-brand-700",
+                value === option && "bg-brand-50 font-semibold text-brand-700",
               )}
             >
-              {opt}
+              {option}
             </button>
           ))}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -434,18 +502,20 @@ function MobileSelect({
   label: string;
   options: string[];
   value: string;
-  onChange: (v: string) => void;
+  onChange: (value: string) => void;
 }) {
   return (
-    <label className="flex flex-col gap-0.5 min-w-0">
+    <label className="flex min-w-0 flex-col gap-0.5">
       <span className="text-[10px] font-medium uppercase tracking-wide text-ink-soft">{label}</span>
       <select
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(event) => onChange(event.target.value)}
         className="w-full truncate rounded border border-border-soft bg-white px-2 py-1 text-[12px] text-ink focus:outline-none focus:ring-1 focus:ring-brand-500"
       >
-        {options.map((opt) => (
-          <option key={opt} value={opt}>{opt}</option>
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
         ))}
       </select>
     </label>
@@ -456,13 +526,13 @@ function DropdownMenu({ items }: { items: { label: string; href: string }[] }) {
   return (
     <div
       role="menu"
-      className="invisible absolute left-1/2 top-full z-50 mt-1 min-w-56 -translate-x-1/2 translate-y-1 rounded-lg bg-white border border-border-soft opacity-0 shadow-(--shadow-pop) transition-all duration-150 group-hover/nav:visible group-hover/nav:translate-y-0 group-hover/nav:opacity-100"
+      className="invisible absolute left-1/2 top-full z-50 mt-1 min-w-56 -translate-x-1/2 translate-y-1 rounded-lg border border-border-soft bg-white opacity-0 shadow-(--shadow-pop) transition-all duration-150 group-hover/nav:visible group-hover/nav:translate-y-0 group-hover/nav:opacity-100"
     >
       <ul className="py-2">
-        {items.map((m) => (
-          <li key={m.label}>
+        {items.map((item) => (
+          <li key={item.label}>
             <Link
-              href={m.href}
+              href={item.href}
               role="menuitem"
               className="flex items-center gap-2 px-4 py-2.5 text-[14px] font-medium text-ink hover:bg-brand-50 hover:text-brand-700"
             >
@@ -480,7 +550,7 @@ function DropdownMenu({ items }: { items: { label: string; href: string }[] }) {
               >
                 <polyline points="9 6 15 12 9 18" />
               </svg>
-              {m.label}
+              {item.label}
             </Link>
           </li>
         ))}
@@ -489,30 +559,17 @@ function DropdownMenu({ items }: { items: { label: string; href: string }[] }) {
   );
 }
 
-function LoginPill({
-  tone,
-  label,
-  href,
-  onClick,
-}: {
-  tone: "brand" | "accent" | "info";
-  label: string;
-  href?: string;
-  onClick?: () => void;
-}) {
+function LoginPill({ label, href }: { label: string; href: string }) {
   const cls = cn(
-    "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-white text-[12px] font-semibold shadow-sm transition-opacity hover:opacity-90",
-    tone === "brand" && "bg-brand-600",
-    tone === "accent" && "bg-accent-500",
-    tone === "info" && "bg-info-500",
+    "inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-3 py-1.5 text-[12px] font-semibold text-white shadow-sm transition-opacity hover:opacity-90",
   );
-  const icon = (
-    <svg viewBox="0 0 24 24" width={14} height={14} aria-hidden fill="currentColor">
-      <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-3.3 0-8 1.7-8 5v2h16v-2c0-3.3-4.7-5-8-5Z" />
-    </svg>
+
+  return (
+    <Link href={href} className={cls}>
+      <svg viewBox="0 0 24 24" width={14} height={14} aria-hidden fill="currentColor">
+        <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-3.3 0-8 1.7-8 5v2h16v-2c0-3.3-4.7-5-8-5Z" />
+      </svg>
+      {label}
+    </Link>
   );
-  if (onClick) {
-    return <button type="button" onClick={onClick} className={cls}>{icon}{label}</button>;
-  }
-  return <Link href={href ?? "#"} className={cls}>{icon}{label}</Link>;
 }
