@@ -1,83 +1,89 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useTranslate } from "@tolgee/react";
 import Logo from "./Logo";
 import { cn } from "@/lib/cn";
 import AuthModal from "@/components/auth/AuthModal";
 import { useAuthStore } from "@/state/authStore";
 import { useLocaleStore, useCountryLocale } from "@/state/localeStore";
+import { getCountryFlagUrl } from "@/lib/countryFlags";
 
 type NavItem = {
-  label: string;
+  labelKey: string;
   href: string;
-  menu?: { label: string; href: string }[];
+  menu?: { labelKey: string; href: string }[];
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Flight", href: "/flight" },
-  { label: "Hotel", href: "/hotel" },
-    {
-    label: "Train",
+  { labelKey: "nav.flight", href: "/flight" },
+  { labelKey: "nav.hotel", href: "/hotel" },
+  {
+    labelKey: "nav.train",
     href: "#",
     menu: [
-      { label: "Search", href: "/search" },
-      { label: "Tickets", href: "/tickets" },
-      { label: "Change Request", href: "/change-request" },
-      { label: "File TDR Online", href: "/file-tdr-online" },
-      
+      { labelKey: "nav.search", href: "/search" },
+      { labelKey: "nav.tickets", href: "/tickets" },
+      { labelKey: "nav.change_request", href: "/change-request" },
+      { labelKey: "nav.file_tdr_online", href: "/file-tdr-online" },
     ],
   },
   {
-    label: "Holiday Packages",
+    labelKey: "nav.holiday_packages",
     href: "#",
     menu: [
-      { label: "National Tour Packages", href: "/national-tour-packages" },
-      { label: "International Tour Packages", href: "/international-tour-packages" },
+      { labelKey: "nav.national_tour_packages", href: "/national-tour-packages" },
+      { labelKey: "nav.international_tour_packages", href: "/international-tour-packages" },
     ],
   },
   {
-    label: "Accommodation",
+    labelKey: "nav.accommodation",
     href: "#",
     menu: [
-      
-      { label: "Homestay", href: "#" },
-      { label: "Airbnb", href: "#" },
-      { label: "Villa", href: "#" },
-      { label: "Guest House", href: "#" },
-      { label: "House Board", href: "#" },
-      { label: "Hostels", href: "#" },
-      { label: "Resorts", href: "#" },
+      { labelKey: "nav.homestay", href: "#" },
+      { labelKey: "nav.airbnb", href: "#" },
+      { labelKey: "nav.villa", href: "#" },
+      { labelKey: "nav.guest_house", href: "#" },
+      { labelKey: "nav.house_board", href: "#" },
+      { labelKey: "nav.hostels", href: "#" },
+      { labelKey: "nav.resorts", href: "#" },
     ],
   },
   {
-    label: "Transport",
+    labelKey: "nav.transport",
     href: "#",
     menu: [
-      { label: "Taxi Package", href: "/taxi-package" },
-      { label: "Cabs", href: "/cabs" },
-      { label: "Tour Bus", href: "/tour-bus" },
-      { label: "Train", href: "/train" },
-      
+      { labelKey: "nav.taxi_package", href: "/taxi-package" },
+      { labelKey: "nav.cabs", href: "/cabs" },
+      { labelKey: "nav.tour_bus", href: "/tour-bus" },
+      { labelKey: "nav.train", href: "/train" },
     ],
   },
-  { label: "Cruise", href: "/cruise" },
-  { label: "Bus", href: "/bus" },
-  { label: "Events", href: "/events" },
   {
-    label: "Visa Consultancy",
+    labelKey: "nav.cruise",
     href: "#",
     menu: [
-      { label: "PR Visa", href: "/visa/pr-visa" },
-      { label: "Work Visa", href: "/visa/work-visa" },
-      { label: "Investor Visa", href: "/visa/investor-visa" },
-      { label: "Study Visa", href: "/visa/study-visa" },
-      { label: "Visit Visa", href: "/visa/visit-visa" },
-      { label: "Tourist Visa", href: "#" },
+      { labelKey: "nav.cruise_for_andaman", href: "#" },
+      { labelKey: "nav.general_cruise", href: "/cruise" },
     ],
   },
-  { label: "Insurance", href: "/insurance" },
-  { label: "Offers", href: "/offers" },
+  { labelKey: "nav.bus", href: "/bus" },
+  { labelKey: "nav.events", href: "/events" },
+  {
+    labelKey: "nav.visa_consultancy",
+    href: "#",
+    menu: [
+      { labelKey: "nav.pr_visa", href: "/visa/pr-visa" },
+      { labelKey: "nav.work_visa", href: "/visa/work-visa" },
+      { labelKey: "nav.investor_visa", href: "/visa/investor-visa" },
+      { labelKey: "nav.study_visa", href: "/visa/study-visa" },
+      { labelKey: "nav.visit_visa", href: "/visa/visit-visa" },
+      { labelKey: "nav.tourist_visa", href: "#" },
+    ],
+  },
+  { labelKey: "nav.insurance", href: "/insurance" },
+  { labelKey: "nav.offers", href: "/offers" },
 ];
 
 const COUNTRIES = [
@@ -99,14 +105,30 @@ const COUNTRIES = [
   "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe",
 ];
 
-const LANGUAGES = [
-  "English", "Hindi", "Spanish", "French", "Chinese",
-  "Arabic", "Bengali", "Portuguese", "Russian", "Urdu",
+const LANGUAGE_OPTIONS: { name: string; key: string }[] = [
+  { name: "English", key: "language.english" },
+  { name: "Hindi", key: "language.hindi" },
+  { name: "Spanish", key: "language.spanish" },
+  { name: "French", key: "language.french" },
+  { name: "Chinese", key: "language.chinese" },
+  { name: "Arabic", key: "language.arabic" },
+  { name: "Bengali", key: "language.bengali" },
+  { name: "Portuguese", key: "language.portuguese" },
+  { name: "Russian", key: "language.russian" },
+  { name: "Urdu", key: "language.urdu" },
 ];
+
+const CURRENCY_OPTIONS = [
+  { value: "INR", symbol: "₹" },
+  { value: "USD", symbol: "$" },
+] as const;
+
+type CurrencyCode = (typeof CURRENCY_OPTIONS)[number]["value"];
 
 type OpenDropdown = "country" | "currency" | "language" | null;
 
 export default function Header() {
+  const { t } = useTranslate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
@@ -120,6 +142,14 @@ export default function Header() {
   const language = useLocaleStore((s) => s.language);
   const setLanguage = useLocaleStore((s) => s.setLanguage);
   const { currency } = useCountryLocale();
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>(
+    currency === "USD" ? "USD" : "INR",
+  );
+
+  const languageOptionLabels = useMemo(
+    () => LANGUAGE_OPTIONS.map((opt) => ({ value: opt.name, label: t(opt.key) })),
+    [t],
+  );
 
   const toggleMobileSection = (label: string) => {
     setMobileExpanded((current) => (current === label ? null : label));
@@ -164,25 +194,31 @@ export default function Header() {
             {/* Country / Currency / Language selectors */}
             <div className="flex items-center gap-3 border-r border-white/20 pr-3">
               <SelectDropdown
-                label="Country"
-                options={COUNTRIES}
+                label={t("header.country")}
+                options={COUNTRIES.map((c) => ({ value: c, label: c }))}
                 value={country}
                 onChange={setCountry}
                 isOpen={openDropdown === "country"}
                 onToggle={() => toggleDropdown("country")}
+                showFlags
               />
               <span className="text-white/30 select-none">|</span>
-              <span className="text-white/85 whitespace-nowrap text-[13px]" aria-label={`Currency: ${currency}`}>
-                {currency}
-              </span>
+              <CurrencyDropdown
+                value={selectedCurrency}
+                onChange={setSelectedCurrency}
+                isOpen={openDropdown === "currency"}
+                onToggle={() => toggleDropdown("currency")}
+                ariaLabel={t("header.currency")}
+              />
               <span className="text-white/30 select-none">|</span>
               <SelectDropdown
-                label="Language"
-                options={LANGUAGES}
+                label={t("header.language")}
+                options={languageOptionLabels}
                 value={language}
                 onChange={setLanguage}
                 isOpen={openDropdown === "language"}
                 onToggle={() => toggleDropdown("language")}
+                showLanguageIcon
               />
             </div>
 
@@ -190,19 +226,19 @@ export default function Header() {
             {user ? (
               <div className="flex items-center gap-2">
                 <Link href="/my-trips" className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-white/85 hover:text-white text-[12px] font-semibold transition-colors">
-                  My Trips
+                  {t("header.my_trips")}
                 </Link>
                 <span className="text-white/50">·</span>
                 <span className="text-[12px] text-white/85">{user.name}</span>
                 <button type="button" onClick={logout} className="inline-flex items-center gap-1.5 rounded-full border border-white/30 px-3 py-1.5 text-white/85 hover:text-white text-[12px] font-semibold transition-colors">
-                  Sign Out
+                  {t("header.sign_out")}
                 </button>
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <LoginPill tone="accent" label="Customer Login" onClick={() => { setAuthTab("customer"); setAuthOpen(true); }} />
-                <LoginPill tone="info" label="Partner Login" href="/partner-login" />
-                <LoginPill tone="brand" label="Agent Login" onClick={() => { setAuthTab("agent"); setAuthOpen(true); }} />
+                <LoginPill tone="accent" label={t("header.customer_login")} onClick={() => { setAuthTab("customer"); setAuthOpen(true); }} />
+                <LoginPill tone="info" label={t("header.partner_login")} href="/partner-login" />
+                <LoginPill tone="brand" label={t("header.agent_login")} onClick={() => { setAuthTab("agent"); setAuthOpen(true); }} />
               </div>
             )}
           </div>
@@ -216,12 +252,12 @@ export default function Header() {
           <nav className="hidden lg:block">
             <ul className="flex items-center gap-7 text-[14px] font-semibold text-ink">
               {NAV_ITEMS.map((item) => (
-                <li key={item.label} className="group/nav relative">
+                <li key={item.labelKey} className="group/nav relative">
                   <Link
                     href={item.href}
                     className="inline-flex items-center gap-1 py-2 transition-colors group-hover/nav:text-brand-700"
                   >
-                    {item.label}
+                    {t(item.labelKey)}
                     {item.menu ? (
                       <svg
                         viewBox="0 0 24 24"
@@ -239,14 +275,14 @@ export default function Header() {
                       </svg>
                     ) : null}
                   </Link>
-                  {item.menu ? <DropdownMenu items={item.menu} /> : null}
+                  {item.menu ? <DropdownMenu items={item.menu} t={t} /> : null}
                 </li>
               ))}
             </ul>
           </nav>
           <button
             type="button"
-            aria-label="Toggle menu"
+            aria-label={t("header.toggle_menu")}
             onClick={() => {
               setMobileOpen((v) => {
                 const next = !v;
@@ -280,82 +316,82 @@ export default function Header() {
         <nav className="lg:hidden border-b border-border-soft bg-white max-h-[70vh] overflow-y-auto scrollbar-thin">
           {/* Mobile selectors row */}
           <div className="grid grid-cols-3 gap-2 border-b border-border-soft/60 px-4 py-3 sm:px-6">
-            <MobileSelect label="Country" options={COUNTRIES} value={country} onChange={setCountry} />
-            <label className="flex flex-col gap-0.5 min-w-0">
-              <span className="text-[10px] font-medium uppercase tracking-wide text-ink-soft">Currency</span>
-              <span className="w-full truncate rounded border border-border-soft bg-surface-muted px-2 py-1 text-[12px] text-ink">
-                {currency}
-              </span>
-            </label>
-            <MobileSelect label="Language" options={LANGUAGES} value={language} onChange={setLanguage} />
+            <MobileSelect label={t("header.country")} options={COUNTRIES.map((c) => ({ value: c, label: c }))} value={country} onChange={setCountry} showFlag />
+            <MobileCurrencySelect value={selectedCurrency} onChange={setSelectedCurrency} label={t("header.currency")} />
+            <MobileSelect label={t("header.language")} options={languageOptionLabels} value={language} onChange={setLanguage} showLanguageIcon />
           </div>
           <ul className="flex flex-col py-2">
-            {NAV_ITEMS.map((item) => (
-              <li key={item.label}>
-                {item.menu ? (
-                  <div className="flex items-center justify-between border-b border-border-soft/60 px-4 py-3 sm:px-6">
-                    <span className="text-[14px] font-semibold text-ink">{item.label}</span>
-                    <button
-                      type="button"
-                      aria-label={`Toggle ${item.label} menu`}
-                      aria-expanded={mobileExpanded === item.label}
-                      onClick={() => toggleMobileSection(item.label)}
-                      className="grid h-8 w-8 place-items-center rounded-md text-ink hover:bg-surface-muted"
-                    >
-                      <svg
-                        viewBox="0 0 24 24"
-                        width={16}
-                        height={16}
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth={2.2}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden
-                        className={cn(
-                          "transition-transform",
-                          mobileExpanded === item.label && "rotate-180",
-                        )}
+            {NAV_ITEMS.map((item) => {
+              const itemLabel = t(item.labelKey);
+              return (
+                <li key={item.labelKey}>
+                  {item.menu ? (
+                    <div className="flex items-center justify-between border-b border-border-soft/60 px-4 py-3 sm:px-6">
+                      <span className="text-[14px] font-semibold text-ink">{itemLabel}</span>
+                      <button
+                        type="button"
+                        aria-label={t("header.toggle_section_menu", { label: itemLabel })}
+                        aria-expanded={mobileExpanded === item.labelKey}
+                        onClick={() => toggleMobileSection(item.labelKey)}
+                        className="grid h-8 w-8 place-items-center rounded-md text-ink hover:bg-surface-muted"
                       >
-                        <polyline points="6 9 12 15 18 9" />
-                      </svg>
-                    </button>
-                  </div>
-                ) : (
-                  <Link
-                    href={item.href}
-                    className="block border-b border-border-soft/60 px-4 py-3 text-[14px] font-semibold text-ink hover:bg-surface-muted sm:px-6"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    {item.label}
-                  </Link>
-                )}
-                {item.menu && mobileExpanded === item.label ? (
-                  <ul className="bg-surface-muted">
-                    {item.menu.map((m) => (
-                      <li key={m.label}>
-                        <Link
-                          href={m.href}
-                          className="block px-8 py-2.5 text-[13px] text-ink-soft hover:text-brand-700 sm:px-10"
-                          onClick={() => {
-                            setMobileOpen(false);
-                            setMobileExpanded(null);
-                          }}
+                        <svg
+                          viewBox="0 0 24 24"
+                          width={16}
+                          height={16}
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={2.2}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden
+                          className={cn(
+                            "transition-transform",
+                            mobileExpanded === item.labelKey && "rotate-180",
+                          )}
                         >
-                          {m.label}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </li>
-            ))}
+                          <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                      </button>
+                    </div>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      className="block border-b border-border-soft/60 px-4 py-3 text-[14px] font-semibold text-ink hover:bg-surface-muted sm:px-6"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      {itemLabel}
+                    </Link>
+                  )}
+                  {item.menu && mobileExpanded === item.labelKey ? (
+                    <ul className="bg-surface-muted">
+                      {item.menu.map((m) => (
+                        <li key={m.labelKey}>
+                          <Link
+                            href={m.href}
+                            className="block px-8 py-2.5 text-[13px] text-ink-soft hover:text-brand-700 sm:px-10"
+                            onClick={() => {
+                              setMobileOpen(false);
+                              setMobileExpanded(null);
+                            }}
+                          >
+                            {t(m.labelKey)}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </li>
+              );
+            })}
           </ul>
         </nav>
       )}
     </header>
   );
 }
+
+type Option = { value: string; label: string };
 
 function SelectDropdown({
   label,
@@ -364,24 +400,41 @@ function SelectDropdown({
   onChange,
   isOpen,
   onToggle,
+  showFlags = false,
+  showLanguageIcon = false,
 }: {
   label: string;
-  options: string[];
+  options: Option[];
   value: string;
   onChange: (v: string) => void;
   isOpen: boolean;
   onToggle: () => void;
+  showFlags?: boolean;
+  showLanguageIcon?: boolean;
 }) {
+  const selectedFlagUrl = showFlags ? getCountryFlagUrl(value) : null;
+  const selectedLabel = options.find((opt) => opt.value === value)?.label ?? value;
+
   return (
     <div className="relative">
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={isOpen}
-        aria-label={`${label}: ${value}`}
+        aria-label={`${label}: ${selectedLabel}`}
         className="flex items-center gap-1 text-white/85 hover:text-white transition-colors whitespace-nowrap"
       >
-        <span>{value}</span>
+        {selectedFlagUrl ? (
+          <img
+            src={selectedFlagUrl}
+            alt={`${value} flag`}
+            width={18}
+            height={14}
+            className="h-3.5 w-[18px] rounded-[2px] object-cover"
+          />
+        ) : null}
+        {showLanguageIcon ? <LanguageIcon className="h-3.5 w-3.5 shrink-0" /> : null}
+        <span>{selectedLabel}</span>
         <svg
           viewBox="0 0 24 24"
           width={11}
@@ -406,17 +459,26 @@ function SelectDropdown({
         >
           {options.map((opt) => (
             <button
-              key={opt}
+              key={opt.value}
               type="button"
               role="option"
-              aria-selected={value === opt}
-              onClick={() => { onChange(opt); onToggle(); }}
+              aria-selected={value === opt.value}
+              onClick={() => { onChange(opt.value); onToggle(); }}
               className={cn(
-                "w-full text-left px-3 py-2 text-[13px] text-ink hover:bg-brand-50 hover:text-brand-700 transition-colors",
-                value === opt && "bg-brand-50 text-brand-700 font-semibold",
+                "flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-ink hover:bg-brand-50 hover:text-brand-700 transition-colors",
+                value === opt.value && "bg-brand-50 text-brand-700 font-semibold",
               )}
             >
-              {opt}
+              {showFlags && getCountryFlagUrl(opt.value) ? (
+                <img
+                  src={getCountryFlagUrl(opt.value) ?? undefined}
+                  alt={`${opt.value} flag`}
+                  width={18}
+                  height={14}
+                  className="h-3.5 w-[18px] shrink-0 rounded-[2px] object-cover"
+                />
+              ) : null}
+              <span>{opt.label}</span>
             </button>
           ))}
         </div>
@@ -430,29 +492,190 @@ function MobileSelect({
   options,
   value,
   onChange,
+  showFlag = false,
+  showLanguageIcon = false,
 }: {
   label: string;
-  options: string[];
+  options: Option[];
   value: string;
   onChange: (v: string) => void;
+  showFlag?: boolean;
+  showLanguageIcon?: boolean;
 }) {
+  const flagUrl = showFlag ? getCountryFlagUrl(value) : null;
+  const hasLeadingIcon = Boolean(flagUrl || showLanguageIcon);
+
   return (
     <label className="flex flex-col gap-0.5 min-w-0">
       <span className="text-[10px] font-medium uppercase tracking-wide text-ink-soft">{label}</span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full truncate rounded border border-border-soft bg-white px-2 py-1 text-[12px] text-ink focus:outline-none focus:ring-1 focus:ring-brand-500"
-      >
-        {options.map((opt) => (
-          <option key={opt} value={opt}>{opt}</option>
-        ))}
-      </select>
+      <span className="relative">
+        {flagUrl ? (
+          <img
+            src={flagUrl}
+            alt={`${value} flag`}
+            width={18}
+            height={14}
+            className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-[18px] -translate-y-1/2 rounded-[2px] object-cover"
+          />
+        ) : null}
+        {showLanguageIcon ? (
+          <LanguageIcon className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-soft" />
+        ) : null}
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={cn(
+            "w-full truncate rounded border border-border-soft bg-white px-2 py-1 text-[12px] text-ink focus:outline-none focus:ring-1 focus:ring-brand-500",
+            hasLeadingIcon && "pl-8",
+          )}
+        >
+          {options.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+      </span>
     </label>
   );
 }
 
-function DropdownMenu({ items }: { items: { label: string; href: string }[] }) {
+function LanguageIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className={className}
+    >
+      <path d="m5 8 6 6" />
+      <path d="m4 14 6-6 2-3" />
+      <path d="M2 5h12" />
+      <path d="M7 2h1" />
+      <path d="m22 22-5-10-5 10" />
+      <path d="M14 18h6" />
+    </svg>
+  );
+}
+
+function CurrencyDropdown({
+  value,
+  onChange,
+  isOpen,
+  onToggle,
+  ariaLabel,
+}: {
+  value: CurrencyCode;
+  onChange: (value: CurrencyCode) => void;
+  isOpen: boolean;
+  onToggle: () => void;
+  ariaLabel: string;
+}) {
+  const selected = CURRENCY_OPTIONS.find((option) => option.value === value) ?? CURRENCY_OPTIONS[0];
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={isOpen}
+        aria-label={`${ariaLabel}: ${selected.value}`}
+        className="flex items-center gap-1 text-white/85 hover:text-white transition-colors whitespace-nowrap"
+      >
+        <span className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-white/40 text-[11px] font-semibold leading-none">
+          {selected.symbol}
+        </span>
+        <span>{selected.value}</span>
+        <svg
+          viewBox="0 0 24 24"
+          width={11}
+          height={11}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+          className={cn("transition-transform duration-150", isOpen && "rotate-180")}
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <div
+          role="listbox"
+          aria-label={ariaLabel}
+          className="absolute left-0 top-[calc(100%+8px)] z-50 min-w-[8rem] overflow-hidden rounded-lg bg-white border border-border-soft shadow-(--shadow-pop) py-1"
+        >
+          {CURRENCY_OPTIONS.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              role="option"
+              aria-selected={value === option.value}
+              onClick={() => { onChange(option.value); onToggle(); }}
+              className={cn(
+                "flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-ink hover:bg-brand-50 hover:text-brand-700 transition-colors",
+                value === option.value && "bg-brand-50 text-brand-700 font-semibold",
+              )}
+            >
+              <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-surface-muted text-[12px] font-semibold">
+                {option.symbol}
+              </span>
+              <span>{option.value}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MobileCurrencySelect({
+  value,
+  onChange,
+  label,
+}: {
+  value: CurrencyCode;
+  onChange: (value: CurrencyCode) => void;
+  label: string;
+}) {
+  const selected = CURRENCY_OPTIONS.find((option) => option.value === value) ?? CURRENCY_OPTIONS[0];
+
+  return (
+    <label className="flex flex-col gap-0.5 min-w-0">
+      <span className="text-[10px] font-medium uppercase tracking-wide text-ink-soft">{label}</span>
+      <span className="relative">
+        <span className="pointer-events-none absolute left-2 top-1/2 inline-flex h-4 w-4 -translate-y-1/2 items-center justify-center rounded-full bg-surface-muted text-[11px] font-semibold leading-none text-ink-soft">
+          {selected.symbol}
+        </span>
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value as CurrencyCode)}
+          className="w-full truncate rounded border border-border-soft bg-white py-1 pl-8 pr-2 text-[12px] text-ink focus:outline-none focus:ring-1 focus:ring-brand-500"
+          aria-label={label}
+        >
+          {CURRENCY_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.symbol} {option.value}
+            </option>
+          ))}
+        </select>
+      </span>
+    </label>
+  );
+}
+
+function DropdownMenu({
+  items,
+  t,
+}: {
+  items: { labelKey: string; href: string }[];
+  t: (key: string) => string;
+}) {
   return (
     <div
       role="menu"
@@ -460,7 +683,7 @@ function DropdownMenu({ items }: { items: { label: string; href: string }[] }) {
     >
       <ul className="py-2">
         {items.map((m) => (
-          <li key={m.label}>
+          <li key={m.labelKey}>
             <Link
               href={m.href}
               role="menuitem"
@@ -480,7 +703,7 @@ function DropdownMenu({ items }: { items: { label: string; href: string }[] }) {
               >
                 <polyline points="9 6 15 12 9 18" />
               </svg>
-              {m.label}
+              {t(m.labelKey)}
             </Link>
           </li>
         ))}
