@@ -5,7 +5,7 @@ export default function FlightHero() {
     <section aria-label="Flight booking" className="relative isolate">
       <div className="relative h-[480px] w-full overflow-hidden">
         <img
-          src="https://images.unsplash.com/photo-1583416750470-965b2707b355?auto=format&fit=crop&w=2000&q=80"
+          src="/aeroplane.png"
           alt=""
           aria-hidden
           className="h-full w-full object-cover"
