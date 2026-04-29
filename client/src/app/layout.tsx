@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ToastProvider } from "@/components/ui/Toast";
 import TranslationProvider from "@/i18n/TranslationProvider";
@@ -18,10 +18,11 @@ export const metadata: Metadata = {
   title: "SpaksTrip — Flights, Hotels, Holidays & More",
   description:
     "Book flights, hotels, holiday packages, visas and more. Powered by SpaksTrip.",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
