@@ -3,23 +3,29 @@ import { assertTboSuccess, TboInvalidSessionError } from "./errors";
 import { logRequest, logResponse, logError } from "./log";
 import type { TboAuthResponse } from "./types";
 
-// ─── Module-level token cache (lives in Node process memory) ─────────────────
+// Endpoint copied verbatim from Authentication.html:
+//   <a href="http://sharedapi.tektravels.com/SharedData.svc/rest/Authenticate">
+const TBO_AUTHENTICATE_URL =
+  "http://sharedapi.tektravels.com/SharedData.svc/rest/Authenticate";
+
+// Per HTML FAQ Q3: token is valid from 00:00:00 till 23:59:59 of the current
+// day. Bullet on the page also notes "After 12:02 AM no new booking with old
+// token." So we expire the cache at end-of-day, with a small safety buffer.
+const TOKEN_RENEW_BUFFER_MS = 5 * 60 * 1000;
+
+function endOfDayMs(): number {
+  const d = new Date();
+  d.setHours(23, 59, 59, 999);
+  return d.getTime();
+}
 
 interface TokenEntry {
   tokenId: string;
-  expiresAt: number; // epoch ms
+  expiresAt: number;
 }
 
 let tokenCache: TokenEntry | null = null;
-// Mutex: prevents concurrent re-auth storms when the token expires
 let refreshPromise: Promise<string> | null = null;
-
-// TBO tokens are valid for 24 hours. We cache for 8 hours and refresh
-// proactively to avoid mid-request expiry.
-const TOKEN_TTL_MS = 8 * 60 * 60 * 1000;
-const TOKEN_RENEW_BUFFER_MS = 5 * 60 * 1000;
-
-// ─── URL helpers ─────────────────────────────────────────────────────────────
 
 function getBaseUrl(): string {
   const url = process.env.TBO_API_URL;
@@ -63,12 +69,17 @@ export function tboApiUrl(
   return `${baseUrl}/${cleanPath}`;
 }
 
-// ─── Internal: call TBO authenticate endpoint ─────────────────────────────────
+function maskToken(value: unknown): string {
+  if (typeof value !== "string" || value.length === 0) return "<empty>";
+  if (value.length <= 8) return "***";
+  return `${value.slice(0, 4)}***${value.slice(-2)}`;
+}
 
 async function authenticate(): Promise<string> {
   const userName = process.env.TBO_USER_NAME;
   const password = process.env.TBO_PASSWORD;
   const endUserIp = process.env.TBO_END_USER_IP ?? "1.1.1.1";
+  const clientId = process.env.TBO_CLIENT_ID ?? "ApiIntegrationNew";
 
   if (!userName || !password) {
     throw new Error(
@@ -79,7 +90,7 @@ async function authenticate(): Promise<string> {
   // Per TBO B2B docs: auth endpoint is /SharedServices/SharedData.svc/rest/Authenticate
   const url = tboApiUrl("SharedData.svc/rest/Authenticate", "shared");
   const body = {
-    ClientId: "ApiIntegrationNew",
+    ClientId: clientId,
     UserName: userName,
     Password: password,
     EndUserIp: endUserIp,
@@ -91,8 +102,12 @@ async function authenticate(): Promise<string> {
   try {
     res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
       body: JSON.stringify(body),
+      cache: "no-store",
     });
   } catch (err) {
     logError("Authenticate", err);
@@ -102,31 +117,48 @@ async function authenticate(): Promise<string> {
   }
 
   const text = await res.text();
+
+  if (!res.ok) {
+    logError("Authenticate", new Error(`HTTP ${res.status}`), {
+      status: res.status,
+      bodyPreview: text.slice(0, 500),
+    });
+    throw new Error(`TBO auth HTTP ${res.status} ${res.statusText}: ${text.slice(0, 200)}`);
+  }
+
   let data: TboAuthResponse;
   try {
     data = JSON.parse(text);
   } catch {
-    logError("Authenticate", new Error("non-JSON response"), { status: res.status, text });
-    throw new Error(`TBO auth returned non-JSON (HTTP ${res.status}): ${text.slice(0, 200)}`);
+    logError("Authenticate", new Error("non-JSON response"), {
+      status: res.status,
+      bodyPreview: text.slice(0, 500),
+    });
+    throw new Error(
+      `TBO auth returned non-JSON (HTTP ${res.status}): ${text.slice(0, 200)}`,
+    );
   }
 
-  logResponse("Authenticate", res.status, { ...data, TokenId: data.TokenId ? "***" : null });
+  logResponse("Authenticate", res.status, {
+    ...data,
+    TokenId: maskToken(data.TokenId),
+  });
 
-  if (!res.ok) {
-    throw new Error(`TBO auth HTTP ${res.status}: ${res.statusText}`);
+  if (data.Status !== 1) {
+    throw new Error(
+      `TBO auth returned non-success Status (expected 1, got ${data.Status ?? "undefined"})`,
+    );
   }
 
   assertTboSuccess(data.Error);
 
   if (!data.TokenId) {
-    throw new Error(`TBO auth returned empty TokenId. Status=${data.Status}`);
+    throw new Error("TBO auth response missing TokenId");
   }
 
-  tokenCache = { tokenId: data.TokenId, expiresAt: Date.now() + TOKEN_TTL_MS };
+  tokenCache = { tokenId: data.TokenId, expiresAt: endOfDayMs() };
   return data.TokenId;
 }
-
-// ─── Public: get a valid token (cached or freshly authenticated) ──────────────
 
 export async function getTboToken(): Promise<string> {
   if (tokenCache && tokenCache.expiresAt - Date.now() > TOKEN_RENEW_BUFFER_MS) {
@@ -147,8 +179,6 @@ export function clearTokenCache(): void {
   refreshPromise = null;
 }
 
-// ─── Public: retry wrapper with auto re-auth ─────────────────────────────────
-
 export async function withRetry<T>(fn: (token: string) => Promise<T>): Promise<T> {
   const token = await getTboToken();
   try {
@@ -162,8 +192,6 @@ export async function withRetry<T>(fn: (token: string) => Promise<T>): Promise<T
     throw err;
   }
 }
-
-// ─── Public: build standard TBO request base ─────────────────────────────────
 
 export function tboBase(token: string): { TokenId: string; EndUserIp: string } {
   return {

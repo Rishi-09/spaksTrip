@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useTranslate } from "@tolgee/react";
 import Logo from "./Logo";
 import { cn } from "@/lib/cn";
-import AuthModal from "@/components/auth/AuthModal";
+import RoleGate from "@/components/auth/RoleGate";
 import { useAuthStore } from "@/state/authStore";
 import { useLocaleStore, useCountryLocale } from "@/state/localeStore";
 import { getCountryFlagUrl } from "@/lib/countryFlags";
@@ -132,22 +133,21 @@ const CURRENCY_OPTIONS = [
 
 type CurrencyCode = (typeof CURRENCY_OPTIONS)[number]["value"];
 
-type OpenDropdown = "country" | "currency" | "language" | null;
+type OpenDropdown = "country" | "currency" | "language" | "user" | null;
 
 export default function Header() {
   const { t } = useTranslate();
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
-  const [authOpen, setAuthOpen] = useState(false);
-  const [authTab, setAuthTab] = useState<"customer" | "agent">("customer");
   const [openDropdown, setOpenDropdown] = useState<OpenDropdown>(null);
   const utilityBarRef = useRef<HTMLDivElement>(null);
-  const user = useAuthStore((s) => s.user);
-  const logout = useAuthStore((s) => s.logout);
-  const country = useLocaleStore((s) => s.country);
-  const setCountry = useLocaleStore((s) => s.setCountry);
-  const language = useLocaleStore((s) => s.language);
-  const setLanguage = useLocaleStore((s) => s.setLanguage);
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
+  const country = useLocaleStore((state) => state.country);
+  const setCountry = useLocaleStore((state) => state.setCountry);
+  const language = useLocaleStore((state) => state.language);
+  const setLanguage = useLocaleStore((state) => state.setLanguage);
   const { currency } = useCountryLocale();
   const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>(
     currency === "USD" ? "USD" : "INR",
@@ -168,20 +168,25 @@ export default function Header() {
   );
 
   useEffect(() => {
-    function handleOutside(e: MouseEvent) {
-      if (utilityBarRef.current && !utilityBarRef.current.contains(e.target as Node)) {
+    function handleOutside(event: MouseEvent) {
+      if (utilityBarRef.current && !utilityBarRef.current.contains(event.target as Node)) {
         setOpenDropdown(null);
       }
     }
+
     if (openDropdown) {
       document.addEventListener("mousedown", handleOutside);
     }
+
     return () => document.removeEventListener("mousedown", handleOutside);
   }, [openDropdown]);
 
+  const profileHref = user?.role === "partner" ? "/partner/dashboard" : "/my-trips";
+
   return (
     <header className="sticky top-0 z-40 w-full bg-white shadow-(--shadow-xs)">
-      {/* Top utility bar */}
+      <RoleGate />
+
       <div className="bg-brand-900 text-white text-[13px]">
         <div
           ref={utilityBarRef}
@@ -189,7 +194,7 @@ export default function Header() {
         >
           <a
             href="tel:+919220328072"
-            className="flex items-center gap-2 text-white/85 hover:text-white transition-colors"
+            className="flex items-center gap-2 text-white/85 transition-colors hover:text-white"
           >
             <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" aria-hidden>
               <path d="M6.6 10.8c1.5 2.9 3.7 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.4.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.5 21 3 13.5 3 4.5c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1l-2.3 1.7z" />
@@ -197,8 +202,7 @@ export default function Header() {
             +91 922 032 8072
           </a>
 
-          <div className="hidden sm:flex items-center gap-3">
-            {/* Country / Currency / Language selectors */}
+          <div className="hidden items-center gap-3 sm:flex">
             <div className="flex items-center gap-3 border-r border-white/20 pr-3">
               <SelectDropdown
                 label={t("header.country")}
@@ -229,30 +233,73 @@ export default function Header() {
               />
             </div>
 
-            {/* Login / user actions */}
             {user ? (
-              <div className="flex items-center gap-2">
-                <Link href="/my-trips" className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-white/85 hover:text-white text-[12px] font-semibold transition-colors">
+              <div className="relative flex items-center gap-2">
+                <Link
+                  href="/my-trips"
+                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-semibold text-white/85 transition-colors hover:text-white"
+                >
                   {t("header.my_trips")}
                 </Link>
                 <span className="text-white/50">·</span>
-                <span className="text-[12px] text-white/85">{user.name}</span>
-                <button type="button" onClick={logout} className="inline-flex items-center gap-1.5 rounded-full border border-white/30 px-3 py-1.5 text-white/85 hover:text-white text-[12px] font-semibold transition-colors">
-                  {t("header.sign_out")}
+                <button
+                  type="button"
+                  onClick={() => toggleDropdown("user")}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/20 px-3 py-1.5 text-[12px] font-semibold text-white/90 transition-colors hover:bg-white/8 hover:text-white"
+                >
+                  <span>{user.displayName}</span>
+                  <svg
+                    viewBox="0 0 24 24"
+                    width={12}
+                    height={12}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2.4}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden
+                    className={cn("transition-transform", openDropdown === "user" && "rotate-180")}
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
                 </button>
+
+                {openDropdown === "user" ? (
+                  <div className="absolute right-0 top-[calc(100%+8px)] z-50 min-w-[13rem] rounded-xl border border-border-soft bg-white p-2 text-ink shadow-(--shadow-pop)">
+                    <div className="border-b border-border-soft px-3 py-2">
+                      <p className="text-[13px] font-semibold text-ink">{user.displayName}</p>
+                      <p className="text-[12px] text-ink-muted">{user.email}</p>
+                    </div>
+                    <div className="pt-2">
+                      <Link
+                        href={profileHref}
+                        className="block rounded-lg px-3 py-2 text-[13px] font-medium text-ink hover:bg-surface-muted"
+                        onClick={() => setOpenDropdown(null)}
+                      >
+                        {t("header.profile")}
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setOpenDropdown(null);
+                          await logout();
+                          router.replace("/");
+                        }}
+                        className="block w-full rounded-lg px-3 py-2 text-left text-[13px] font-medium text-ink hover:bg-surface-muted"
+                      >
+                        {t("header.sign_out")}
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             ) : (
-              <div className="flex items-center gap-2">
-                <LoginPill tone="accent" label={t("header.customer_login")} onClick={() => { setAuthTab("customer"); setAuthOpen(true); }} />
-                <LoginPill tone="info" label={t("header.partner_login")} href="/partner-login" />
-                <LoginPill tone="brand" label={t("header.agent_login")} onClick={() => { setAuthTab("agent"); setAuthOpen(true); }} />
-              </div>
+              <LoginPill label="Login / Register" href="/auth" />
             )}
           </div>
         </div>
       </div>
 
-      {/* Main nav */}
       <div className="border-b border-border-soft">
         {/* CHANGE: grid layout to keep Logo left and Navigation centered (hamburger stays right) */}
         <div className="mx-auto st-header-main-nav-inner max-w-7xl px-4 py-3.5 sm:px-6">
@@ -293,8 +340,8 @@ export default function Header() {
             type="button"
             aria-label={t("header.toggle_menu")}
             onClick={() => {
-              setMobileOpen((v) => {
-                const next = !v;
+              setMobileOpen((value) => {
+                const next = !value;
                 if (!next) setMobileExpanded(null);
                 return next;
               });
@@ -319,8 +366,6 @@ export default function Header() {
         </div>
       </div>
 
-      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} defaultTab={authTab} />
-
       {mobileOpen && (
         <nav className="lg:hidden border-b border-border-soft bg-white max-h-[70vh] overflow-y-auto scrollbar-thin">
           {/* Mobile selectors row */}
@@ -329,6 +374,7 @@ export default function Header() {
             <MobileCurrencySelect value={selectedCurrency} onChange={setSelectedCurrency} label={t("header.currency")} />
             <MobileSelect label={t("header.language")} options={languageOptionLabels} value={language} onChange={setLanguage} showLanguageIcon />
           </div>
+
           <ul className="flex flex-col py-2">
             {NAV_ITEMS.map((item) => {
               const itemLabel = t(item.labelKey);
@@ -394,6 +440,39 @@ export default function Header() {
               );
             })}
           </ul>
+
+          <div className="border-t border-border-soft/60 px-4 py-4 sm:px-6">
+            {user ? (
+              <div className="flex flex-col gap-2">
+                <Link
+                  href={profileHref}
+                  className="rounded-lg border border-border-soft px-4 py-3 text-[14px] font-semibold text-ink"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Profile
+                </Link>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setMobileOpen(false);
+                    await logout();
+                    router.replace("/");
+                  }}
+                  className="rounded-lg bg-brand-600 px-4 py-3 text-left text-[14px] font-semibold text-white"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/auth"
+                className="block rounded-lg bg-brand-600 px-4 py-3 text-center text-[14px] font-semibold text-white"
+                onClick={() => setMobileOpen(false)}
+              >
+                Login / Register
+              </Link>
+            )}
+          </div>
         </nav>
       )}
     </header>
@@ -415,7 +494,7 @@ function SelectDropdown({
   label: string;
   options: Option[];
   value: string;
-  onChange: (v: string) => void;
+  onChange: (value: string) => void;
   isOpen: boolean;
   onToggle: () => void;
   showFlags?: boolean;
@@ -460,38 +539,39 @@ function SelectDropdown({
         </svg>
       </button>
 
-      {isOpen && (
+      {isOpen ? (
         <div
           role="listbox"
           aria-label={normalizeAriaText(label)}
-          className="absolute left-0 top-[calc(100%+8px)] z-50 min-w-[10rem] max-h-60 overflow-y-auto rounded-lg bg-white border border-border-soft shadow-(--shadow-pop) py-1"
+          className="absolute left-0 top-[calc(100%+8px)] z-50 max-h-60 min-w-[10rem] overflow-y-auto rounded-lg border border-border-soft bg-white py-1 shadow-(--shadow-pop)"
         >
-          {options.map((opt) => (
+          {options.map((option) => (
             <button
-              key={opt.value}
+              key={option.value}
               type="button"
               role="option"
-              aria-selected={value === opt.value}
-              onClick={() => { onChange(opt.value); onToggle(); }}
+              aria-selected={value === option.value}
+              onClick={() => { onChange(option.value); onToggle(); }}
               className={cn(
                 "flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-ink hover:bg-brand-50 hover:text-brand-700 transition-colors",
-                value === opt.value && "bg-brand-50 text-brand-700 font-semibold",
+                value === option.value && "bg-brand-50 text-brand-700 font-semibold",
               )}
             >
-              {showFlags && getCountryFlagUrl(opt.value) ? (
+              {showFlags && getCountryFlagUrl(option.value) ? (
                 <img
-                  src={getCountryFlagUrl(opt.value) ?? undefined}
-                  alt={`${opt.value} flag`}
+                  src={getCountryFlagUrl(option.value) ?? undefined}
+                  alt={`${option.value} flag`}
                   width={18}
                   height={14}
                   className="h-3.5 w-[18px] shrink-0 rounded-[2px] object-cover"
                 />
               ) : null}
-              <span>{opt.label}</span>
+              {showLanguageIcon ? <LanguageIcon className="h-3.5 w-3.5 shrink-0 text-ink-soft" /> : null}
+              <span>{option.label}</span>
             </button>
           ))}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -515,7 +595,7 @@ function MobileSelect({
   const hasLeadingIcon = Boolean(flagUrl || showLanguageIcon);
 
   return (
-    <label className="flex flex-col gap-0.5 min-w-0">
+    <label className="flex min-w-0 flex-col gap-0.5">
       <span className="text-[10px] font-medium uppercase tracking-wide text-ink-soft">{label}</span>
       <span className="relative">
         {flagUrl ? (
@@ -688,7 +768,7 @@ function DropdownMenu({
   return (
     <div
       role="menu"
-      className="invisible absolute left-1/2 top-full z-50 mt-1 min-w-56 -translate-x-1/2 translate-y-1 rounded-lg bg-white border border-border-soft opacity-0 shadow-(--shadow-pop) transition-all duration-150 group-hover/nav:visible group-hover/nav:translate-y-0 group-hover/nav:opacity-100"
+      className="invisible absolute left-1/2 top-full z-50 mt-1 min-w-56 -translate-x-1/2 translate-y-1 rounded-lg border border-border-soft bg-white opacity-0 shadow-(--shadow-pop) transition-all duration-150 group-hover/nav:visible group-hover/nav:translate-y-0 group-hover/nav:opacity-100"
     >
       <ul className="py-2">
         {items.map((m) => (
@@ -721,30 +801,17 @@ function DropdownMenu({
   );
 }
 
-function LoginPill({
-  tone,
-  label,
-  href,
-  onClick,
-}: {
-  tone: "brand" | "accent" | "info";
-  label: string;
-  href?: string;
-  onClick?: () => void;
-}) {
+function LoginPill({ label, href }: { label: string; href: string }) {
   const cls = cn(
-    "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-white text-[12px] font-semibold shadow-sm transition-opacity hover:opacity-90",
-    tone === "brand" && "bg-brand-600",
-    tone === "accent" && "bg-accent-500",
-    tone === "info" && "bg-info-500",
+    "inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-3 py-1.5 text-[12px] font-semibold text-white shadow-sm transition-opacity hover:opacity-90",
   );
-  const icon = (
-    <svg viewBox="0 0 24 24" width={14} height={14} aria-hidden fill="currentColor">
-      <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-3.3 0-8 1.7-8 5v2h16v-2c0-3.3-4.7-5-8-5Z" />
-    </svg>
+
+  return (
+    <Link href={href} className={cls}>
+      <svg viewBox="0 0 24 24" width={14} height={14} aria-hidden fill="currentColor">
+        <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-3.3 0-8 1.7-8 5v2h16v-2c0-3.3-4.7-5-8-5Z" />
+      </svg>
+      {label}
+    </Link>
   );
-  if (onClick) {
-    return <button type="button" onClick={onClick} className={cls}>{icon}{label}</button>;
-  }
-  return <Link href={href ?? "#"} className={cls}>{icon}{label}</Link>;
 }

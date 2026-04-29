@@ -1,6 +1,6 @@
 import "server-only";
 import { withRetry, tboBase, tboApiUrl } from "../auth";
-import { assertTboSuccess, TboNoResultsError } from "../errors";
+import { assertTboSuccess } from "../errors";
 import { storeTrace } from "../traceCache";
 import { logRequest, logResponse, logError } from "../log";
 import type {
@@ -124,8 +124,9 @@ function mapResult(result: TboFlightResult): FlightOffer {
   const baggageCheckin = parseBaggageKg(outboundSegs[0]?.Baggage);
   const baggageCabin = parseBaggageKg(outboundSegs[0]?.CabinBaggage);
 
-  // Use OfferedFare (post-discount). PublishedFare is the gross airline price.
-  const basePrice = result.Fare?.OfferedFare ?? result.Fare?.PublishedFare ?? 0;
+  // Per HTML response spec: Fare.PublishedFare is the canonical price field.
+  // For API customers Discount is always 0, so PublishedFare === OfferedFare.
+  const basePrice = result.Fare?.PublishedFare ?? 0;
 
   return {
     id: result.ResultIndex,
@@ -237,30 +238,42 @@ export async function tboSearchFlights(
       );
     }
 
+    if (data.Response.ResponseStatus !== 1) {
+      throw new Error(
+        `TBO Search returned non-success ResponseStatus (expected 1, got ${data.Response.ResponseStatus ?? "undefined"})`,
+      );
+    }
+
     assertTboSuccess(data.Response.Error);
 
     const traceId = data.Response.TraceId ?? "";
-    const rawResults: TboFlightResult[][] = data.Response.Results ?? [];
+    const rawResults = data.Response.Results;
 
-    if (!Array.isArray(rawResults) || rawResults.length === 0) {
-      throw new TboNoResultsError();
+    // HTML response shape: Results is a 2D array (Results[][]). Flatten one level
+    // so we handle both nested and accidentally-flat shapes uniformly.
+    const flatResults: TboFlightResult[] = Array.isArray(rawResults)
+      ? (rawResults as unknown[]).flat() as TboFlightResult[]
+      : [];
+
+    if (flatResults.length === 0) {
+      console.log("[TBO] Flight Search returned 0 results");
+      return { offers: [], minPrice: 0, maxPrice: 0 };
     }
 
     const offers: FlightOffer[] = [];
-    for (const group of rawResults) {
-      if (!Array.isArray(group)) continue;
-      for (const result of group) {
-        if (!result?.ResultIndex) continue;
-        if (traceId) storeTrace(result.ResultIndex, traceId);
-        try {
-          offers.push(mapResult(result));
-        } catch (err) {
-          logError("Flight Search mapResult", err, { resultIndex: result.ResultIndex });
-        }
+    for (const result of flatResults) {
+      if (!result?.ResultIndex) continue;
+      if (traceId) storeTrace(result.ResultIndex, traceId);
+      try {
+        offers.push(mapResult(result));
+      } catch (err) {
+        logError("Flight Search mapResult", err, { resultIndex: result.ResultIndex });
       }
     }
 
-    if (offers.length === 0) throw new TboNoResultsError();
+    if (offers.length === 0) {
+      return { offers: [], minPrice: 0, maxPrice: 0 };
+    }
 
     const prices = offers.map((o) => o.basePrice).filter((p) => p > 0);
     const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
