@@ -6,7 +6,7 @@ import Combobox, { type ComboOption } from "@/components/ui/Combobox";
 import Button from "@/components/ui/Button";
 import Chip from "@/components/ui/Chip";
 import { searchStationOptions } from "@/services/trains";
-import type { TrainClass, Quota } from "@/lib/mock/trains";
+import { STATIONS, type TrainClass, type Quota } from "@/lib/mock/trains";
 
 const CLASSES: Array<{ value: TrainClass; label: string }> = [
   { value: "SL", label: "Sleeper (SL)" },
@@ -29,13 +29,40 @@ function stationToOption(s: { code: string; name: string; city: string }): Combo
 
 const today = new Date().toISOString().slice(0, 10);
 
-export default function TrainSearchForm() {
+function stationCodeToOption(code: string | null | undefined): ComboOption | null {
+  if (!code) return null;
+  const station = STATIONS.find((item) => item.code === code);
+  if (!station) return null;
+  return stationToOption(station);
+}
+
+type Props = {
+  variant?: "hero" | "inline";
+  searchPath?: string;
+  initialValues?: {
+    fromCode?: string | null;
+    toCode?: string | null;
+    date?: string | null;
+    cls?: TrainClass | null;
+    quota?: Quota | null;
+  };
+};
+
+export default function TrainSearchForm({
+  variant = "hero",
+  searchPath = "/rail/results",
+  initialValues,
+}: Props) {
   const router = useRouter();
-  const [from, setFrom] = useState<ComboOption | null>(null);
-  const [to, setTo] = useState<ComboOption | null>(null);
-  const [date, setDate] = useState(today);
-  const [cls, setCls] = useState<TrainClass>("SL");
-  const [quota, setQuota] = useState<Quota>("GENERAL");
+  const [from, setFrom] = useState<ComboOption | null>(
+    stationCodeToOption(initialValues?.fromCode),
+  );
+  const [to, setTo] = useState<ComboOption | null>(
+    stationCodeToOption(initialValues?.toCode),
+  );
+  const [date, setDate] = useState(initialValues?.date ?? today);
+  const [cls, setCls] = useState<TrainClass>(initialValues?.cls ?? "SL");
+  const [quota, setQuota] = useState<Quota>(initialValues?.quota ?? "GENERAL");
 
   const swap = () => {
     const tmp = from;
@@ -49,11 +76,17 @@ export default function TrainSearchForm() {
   const onSearch = () => {
     if (!from || !to || !date) return;
     const params = new URLSearchParams({ from: from.value, to: to.value, date, cls, quota });
-    router.push(`/rail/results?${params}`);
+    router.push(`${searchPath}?${params}`);
   };
 
   return (
-    <div className="rounded-2xl bg-white shadow-(--shadow-lg) p-5">
+    <div
+      className={
+        variant === "hero"
+          ? "rounded-2xl bg-white p-5 shadow-(--shadow-lg)"
+          : "rounded-2xl border border-border-soft bg-white p-5 shadow-(--shadow-sm)"
+      }
+    >
       {/* Station row */}
       <div className="flex flex-col md:flex-row items-stretch gap-3">
         <div className="flex-1">

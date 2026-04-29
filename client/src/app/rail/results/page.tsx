@@ -5,6 +5,8 @@ import { useSearchParams } from "next/navigation";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import TrainResultCard from "@/components/rail/TrainResultCard";
+import TrainSearchForm from "@/components/rail/TrainSearchForm";
+import TrainServiceNav from "@/components/rail/TrainServiceNav";
 import Chip from "@/components/ui/Chip";
 import Skeleton from "@/components/ui/Skeleton";
 import EmptyState from "@/components/ui/EmptyState";
@@ -51,13 +53,38 @@ function RailResultsInner() {
   const cls      = (sp.get("cls") ?? "SL") as TrainClass;
   const quota    = (sp.get("quota") ?? "GENERAL") as Quota;
 
+  return (
+    <RailResultsContent
+      key={`${fromCode}-${toCode}-${date}-${cls}-${quota}`}
+      fromCode={fromCode}
+      toCode={toCode}
+      date={date}
+      cls={cls}
+      quota={quota}
+    />
+  );
+}
+
+function RailResultsContent({
+  fromCode,
+  toCode,
+  date,
+  cls,
+  quota,
+}: {
+  fromCode: string;
+  toCode: string;
+  date: string;
+  cls: TrainClass;
+  quota: Quota;
+}) {
+
   const [trains, setTrains] = useState<Train[]>([]);
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState<TrainType | "all">("all");
   const [sortBy, setSortBy] = useState<SortBy>("departs");
 
   useEffect(() => {
-    setLoading(true);
     searchTrains({ fromCode, toCode, date, quota }).then((res) => {
       setTrains(res);
       setLoading(false);
@@ -83,17 +110,43 @@ function RailResultsInner() {
     <div className="min-h-screen flex flex-col bg-surface-muted">
       <Header />
 
-      {/* Context bar */}
-      <div className="bg-brand-900 text-white px-4 py-3">
-        <div className="mx-auto max-w-4xl flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px]">
-          <span className="font-extrabold text-[15px]">{fromCode} → {toCode}</span>
-          <span className="text-white/70">{date}</span>
-          <span className="rounded bg-white/15 px-2 py-0.5 font-semibold">{cls}</span>
-          <span className="rounded bg-white/10 px-2 py-0.5 text-white/80">{quota}</span>
+      <section className="bg-brand-900 px-4 py-6 text-white md:px-6">
+        <div className="mx-auto max-w-5xl">
+          <TrainServiceNav current="search" className="mb-5" />
+          <div className="max-w-3xl">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.24em] text-white/65">
+              Train Search
+            </p>
+            <h1 className="mt-2 text-[30px] font-black leading-tight">
+              {fromCode} to {toCode}
+            </h1>
+            <p className="mt-2 text-[14px] text-white/72">
+              Refine your journey, compare train types, and continue into the
+              existing rail booking flow without leaving the train section.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2 text-[12px]">
+              <span className="rounded-full bg-white/12 px-3 py-1 font-semibold">
+                {date}
+              </span>
+              <span className="rounded-full bg-white/12 px-3 py-1 font-semibold">
+                Class {cls}
+              </span>
+              <span className="rounded-full bg-white/12 px-3 py-1 font-semibold">
+                {quota}
+              </span>
+            </div>
+          </div>
+          <div className="mt-6">
+            <TrainSearchForm
+              key={`${fromCode}-${toCode}-${date}-${cls}-${quota}`}
+              variant="inline"
+              initialValues={{ fromCode, toCode, date, cls, quota }}
+            />
+          </div>
         </div>
-      </div>
+      </section>
 
-      <main className="flex-1 mx-auto max-w-4xl w-full px-4 md:px-6 py-6">
+      <main className="flex-1 mx-auto max-w-5xl w-full px-4 py-6 md:px-6">
         {/* Filters + Sort */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
           <div className="flex flex-wrap gap-2">
@@ -112,6 +165,17 @@ function RailResultsInner() {
             ))}
           </div>
         </div>
+
+        {!loading ? (
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-[14px] font-semibold text-ink">
+              {displayed.length} train{displayed.length === 1 ? "" : "s"} found
+            </p>
+            <p className="text-[12px] text-ink-muted">
+              Powered by the existing rail availability flow
+            </p>
+          </div>
+        ) : null}
 
         {loading && (
           <div className="flex flex-col gap-3">

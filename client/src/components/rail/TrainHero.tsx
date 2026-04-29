@@ -15,13 +15,13 @@ export default function TrainHero() {
             <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z" />
             <path d="M12 6a1 1 0 0 0-1 1v5a1 1 0 0 0 .29.71l3 3a1 1 0 1 0 1.41-1.41L13 11.59V7a1 1 0 0 0-1-1z" />
           </svg>
-          PNR · Tatkal · Quota Booking
+          Search · Tickets · Change Request
         </span>
         <h1 className="text-[36px] font-extrabold text-white leading-tight max-w-xl">
           Book Train Tickets Online
         </h1>
         <p className="mt-2 text-[15px] text-white/75 max-w-sm">
-          Search across all train types — Rajdhani, Shatabdi, Express and more.
+          Search across all train types, then manage tickets and support requests from one train flow.
         </p>
       </div>
 
