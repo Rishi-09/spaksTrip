@@ -29,12 +29,12 @@ const NAV_ITEMS: NavItem[] = [
   { labelKey: "nav.hotel", href: "/hotel" },
   {
     labelKey: "nav.train",
-    href: "#",
+    href: "/train/search",
     menu: [
-      { labelKey: "nav.search", href: "/search" },
-      { labelKey: "nav.tickets", href: "/tickets" },
-      { labelKey: "nav.change_request", href: "/change-request" },
-      { labelKey: "nav.file_tdr_online", href: "/file-tdr-online" },
+      { labelKey: "nav.search", href: "/train/search" },
+      { labelKey: "nav.tickets", href: "/train/tickets" },
+      { labelKey: "nav.change_request", href: "/train/change-request" },
+      { labelKey: "nav.file_tdr_online", href: "/train/file-tdr-online" },
     ],
   },
   {
@@ -65,7 +65,7 @@ const NAV_ITEMS: NavItem[] = [
       { labelKey: "nav.taxi_package", href: "/taxi-package" },
       { labelKey: "nav.cabs", href: "/cabs" },
       { labelKey: "nav.tour_bus", href: "/tour-bus" },
-      { labelKey: "nav.train", href: "/train" },
+      { labelKey: "nav.train", href: "/train/search" },
     ],
   },
   {
