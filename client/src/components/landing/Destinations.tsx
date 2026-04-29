@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslate } from "@tolgee/react";
 import SectionHeading from "./SectionHeading";
 
 type Destination = {
@@ -51,6 +52,7 @@ const DESTINATIONS: Destination[] = [
 const VISIBLE = 4;
 
 export default function Destinations() {
+  const { t } = useTranslate();
   const [start, setStart] = useState(0);
   const total = DESTINATIONS.length;
 
@@ -63,14 +65,14 @@ export default function Destinations() {
     <section className="relative py-20">
       <div className="mx-auto max-w-7xl px-6">
         <SectionHeading
-          title="Destinations Around the World"
-          subtitle="DreamsTour Marketplace is a platform designed to connect fans with exclusive experiences related to a specific tour"
+          title={t("landing.destinations_world")}
+          subtitle={t("landing.destinations_subtitle")}
         />
 
         <div className="relative mt-12">
           <button
             type="button"
-            aria-label="Previous destinations"
+            aria-label={t("landing.previous_destinations")}
             onClick={prev}
             className="absolute -left-4 top-1/2 z-10 -translate-y-1/2 grid h-11 w-11 place-items-center rounded-full bg-white text-zinc-700 shadow-md ring-1 ring-black/5 hover:bg-zinc-50"
           >
@@ -78,7 +80,7 @@ export default function Destinations() {
           </button>
           <button
             type="button"
-            aria-label="Next destinations"
+            aria-label={t("landing.next_destinations")}
             onClick={next}
             className="absolute -right-4 top-1/2 z-10 -translate-y-1/2 grid h-11 w-11 place-items-center rounded-full bg-white text-zinc-700 shadow-md ring-1 ring-black/5 hover:bg-zinc-50"
           >
@@ -97,6 +99,7 @@ export default function Destinations() {
 }
 
 function DestinationCard({ destination }: { destination: Destination }) {
+  const { t } = useTranslate();
   return (
     <article className="group relative h-[440px] overflow-hidden rounded-2xl">
       <img
@@ -110,7 +113,7 @@ function DestinationCard({ destination }: { destination: Destination }) {
         <h3 className="text-2xl font-bold">{destination.name}</h3>
         <div className="mt-2 flex items-center gap-2">
           <Stars />
-          <span className="text-sm text-white/90">{destination.reviews} Reviews</span>
+          <span className="text-sm text-white/90">{t("landing.reviews_count", { count: destination.reviews })}</span>
         </div>
       </div>
     </article>

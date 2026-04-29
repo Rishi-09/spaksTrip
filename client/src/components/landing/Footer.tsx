@@ -1,7 +1,12 @@
+"use client";
+
+import { useTranslate } from "@tolgee/react";
 import Logo from "./Logo";
 import NewsletterForm from "./NewsletterForm";
 
 export default function Footer() {
+  const { t } = useTranslate();
+
   return (
     <footer className="bg-[#F4F6F9]">
       <div className="mx-auto max-w-7xl px-6 py-16">
@@ -9,17 +14,15 @@ export default function Footer() {
           <div>
             <Logo />
             <p className="mt-6 max-w-md text-[15px] leading-relaxed text-zinc-500">
-              Spaks Trip, we specialize in crafting unforgettable journeys —
-              whether you&apos;re exploring the charm of India or venturing
-              across the globe.
+              {t("footer.about_text")}
             </p>
 
             <div className="mt-8">
               <h3 className="text-lg font-extrabold text-[#0E1E3A]">
-                Subscribe to Our Newsletter
+                {t("footer.subscribe_title")}
               </h3>
               <p className="mt-2 text-sm text-zinc-500">
-                Just sign up and we&apos;ll send you a notification by email.
+                {t("footer.subscribe_desc")}
               </p>
 
               <NewsletterForm />
@@ -27,31 +30,31 @@ export default function Footer() {
           </div>
 
           <FooterColumn
-            title="Important Links"
+            title={t("footer.important_links")}
             links={[
-              { label: "Privacy policy", href: "#" },
-              { label: "Terms and Conditions", href: "#" },
-              { label: "Refund & Cancellation Policy", href: "#" },
+              { label: t("footer.privacy_policy"), href: "#" },
+              { label: t("footer.terms_conditions"), href: "#" },
+              { label: t("footer.refund_policy"), href: "#" },
             ]}
           />
           <FooterColumn
-            title="Quick Links"
+            title={t("footer.quick_links")}
             links={[
-              { label: "Flight", href: "#" },
-              { label: "Patner Login", href: "#" },
-              { label: "Contact Us", href: "#" },
+              { label: t("nav.flight"), href: "#" },
+              { label: t("footer.partner_login"), href: "#" },
+              { label: t("footer.contact_us"), href: "#" },
             ]}
           />
 
           <div>
-            <h3 className="text-lg font-extrabold text-[#0E1E3A]">Contact Info</h3>
+            <h3 className="text-lg font-extrabold text-[#0E1E3A]">{t("footer.contact_info")}</h3>
             <ul className="mt-6 flex flex-col gap-5 text-[15px] text-zinc-600">
               <li className="flex items-start gap-3">
                 <IconBubble>
                   <HeadsetIcon />
                 </IconBubble>
                 <div>
-                  <p className="text-zinc-500">Customer Support</p>
+                  <p className="text-zinc-500">{t("footer.customer_support")}</p>
                   <p className="font-medium text-[#0E1E3A]">
                     +91 870 045 8818, +91 922 032 8072
                   </p>
@@ -62,7 +65,7 @@ export default function Footer() {
                   <MailIcon />
                 </IconBubble>
                 <div>
-                  <p className="text-zinc-500">Drop Us an Email</p>
+                  <p className="text-zinc-500">{t("footer.drop_email")}</p>
                   <p className="font-medium text-[#0E1E3A]">
                     spakstrip@gmail.com
                   </p>
@@ -79,8 +82,7 @@ export default function Footer() {
 
         <div className="mt-14 flex flex-col items-start justify-between gap-5 border-t border-zinc-200 pt-6 md:flex-row md:items-center">
           <p className="text-sm text-zinc-500">
-            © Copyright 2025 OYO Products and Services Private Limited. All
-            Rights Reserved.
+            {t("footer.copyright")}
           </p>
           <div className="flex items-center gap-3">
             <SocialIcon label="Facebook"><FacebookIcon /></SocialIcon>

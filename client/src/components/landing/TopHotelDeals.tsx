@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslate } from "@tolgee/react";
 import SectionHeading from "./SectionHeading";
 import { useCountryLocale } from "@/state/localeStore";
 import { formatCurrency } from "@/lib/format";
@@ -25,6 +26,7 @@ const HOTELS: Hotel[] = [
 ];
 
 export default function TopHotelDeals() {
+  const { t } = useTranslate();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [page, setPage] = useState(0);
 
@@ -67,15 +69,15 @@ export default function TopHotelDeals() {
     <section className="py-20">
       <div className="w-full px-10">
         <SectionHeading
-          title="Top Hotel Deals"
-          subtitle="Book hotels worldwide at affordable rates with ease."
+          title={t("hotel.top_deals")}
+          subtitle={t("hotel.top_choices_subtitle")}
         />
 
         {/* SLIDER */}
         <div className="relative mt-12 w-full">
           <button
             type="button"
-            aria-label="Scroll hotel deals left"
+            aria-label={t("landing.scroll_left")}
             onClick={() => scrollCards("left")}
             className="absolute -left-4 top-1/2 z-10 -translate-y-1/2 grid h-11 w-11 place-items-center rounded-full bg-white text-zinc-700 shadow-md ring-1 ring-black/5 hover:bg-zinc-50"
           >
@@ -83,7 +85,7 @@ export default function TopHotelDeals() {
           </button>
           <button
             type="button"
-            aria-label="Scroll hotel deals right"
+            aria-label={t("landing.scroll_right")}
             onClick={() => scrollCards("right")}
             className="absolute -right-4 top-1/2 z-10 -translate-y-1/2 grid h-11 w-11 place-items-center rounded-full bg-white text-zinc-700 shadow-md ring-1 ring-black/5 hover:bg-zinc-50"
           >
@@ -111,7 +113,7 @@ export default function TopHotelDeals() {
             <button
               key={i}
               type="button"
-              aria-label={`Hotel deals page ${i + 1}`}
+              aria-label={t("landing.hotel_deals_page", { n: i + 1 })}
               onClick={() => scrollToPage(i)}
               className={`h-2 rounded-full transition-all ${
                 i === page ? "w-8 bg-[#E0382E]" : "w-2 bg-zinc-300"
@@ -125,6 +127,7 @@ export default function TopHotelDeals() {
 }
 
 function HotelCard({ hotel }: { hotel: Hotel }) {
+  const { t } = useTranslate();
   const { locale, currency } = useCountryLocale();
   const price = formatCurrency(hotel.basePrice, locale, currency);
 
@@ -132,7 +135,7 @@ function HotelCard({ hotel }: { hotel: Hotel }) {
     <a
       href="#"
       className="group relative block h-[460px] w-full  overflow-hidden rounded-xl"
-      aria-label={`Explore hotels in ${hotel.city}`}
+      aria-label={t("landing.explore_hotels_in", { city: hotel.city })}
     >
       <img
         src={hotel.image}
@@ -145,7 +148,7 @@ function HotelCard({ hotel }: { hotel: Hotel }) {
 
       <div className="absolute bottom-4 left-4 flex flex-col gap-0.5">
         <span className="text-xl font-bold text-white drop-shadow">{hotel.city}</span>
-        <span className="text-[11px] text-white/80">from {price}/night</span>
+        <span className="text-[11px] text-white/80">{t("landing.from_per_night", { price })}</span>
       </div>
 
       <span className="absolute bottom-4 right-4 grid h-10 w-10 place-items-center rounded-full bg-white text-[#0E1E3A] shadow transition-transform group-hover:translate-x-1">
