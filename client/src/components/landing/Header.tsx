@@ -126,10 +126,11 @@ const CURRENCY_OPTIONS = [
 
 type CurrencyCode = (typeof CURRENCY_OPTIONS)[number]["value"];
 
-type OpenDropdown = "country" | "currency" | "language" | null;
+type OpenDropdown = "country" | "currency" | "language" | "user" | null;
 
 export default function Header() {
   const { t } = useTranslate();
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
   const [openDropdown, setOpenDropdown] = useState<OpenDropdown>(null);
@@ -226,14 +227,34 @@ export default function Header() {
             </div>
 
             {user ? (
-              <div className="flex items-center gap-2">
-                <Link href="/my-trips" className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-white/85 hover:text-white text-[12px] font-semibold transition-colors">
+              <div className="relative flex items-center gap-2">
+                <Link
+                  href="/my-trips"
+                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-semibold text-white/85 transition-colors hover:text-white"
+                >
                   {t("header.my_trips")}
                 </Link>
                 <span className="text-white/50">·</span>
-                <span className="text-[12px] text-white/85">{user.name}</span>
-                <button type="button" onClick={logout} className="inline-flex items-center gap-1.5 rounded-full border border-white/30 px-3 py-1.5 text-white/85 hover:text-white text-[12px] font-semibold transition-colors">
-                  {t("header.sign_out")}
+                <button
+                  type="button"
+                  onClick={() => toggleDropdown("user")}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/20 px-3 py-1.5 text-[12px] font-semibold text-white/90 transition-colors hover:bg-white/8 hover:text-white"
+                >
+                  <span>{user.displayName}</span>
+                  <svg
+                    viewBox="0 0 24 24"
+                    width={12}
+                    height={12}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2.4}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden
+                    className={cn("transition-transform", openDropdown === "user" && "rotate-180")}
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
                 </button>
 
                 {openDropdown === "user" ? (
@@ -248,7 +269,7 @@ export default function Header() {
                         className="block rounded-lg px-3 py-2 text-[13px] font-medium text-ink hover:bg-surface-muted"
                         onClick={() => setOpenDropdown(null)}
                       >
-                        Profile
+                        {t("header.profile")}
                       </Link>
                       <button
                         type="button"
@@ -259,7 +280,7 @@ export default function Header() {
                         }}
                         className="block w-full rounded-lg px-3 py-2 text-left text-[13px] font-medium text-ink hover:bg-surface-muted"
                       >
-                        Logout
+                        {t("header.sign_out")}
                       </button>
                     </div>
                   </div>
@@ -516,26 +537,27 @@ function SelectDropdown({
         >
           {options.map((option) => (
             <button
-              key={opt.value}
+              key={option.value}
               type="button"
               role="option"
-              aria-selected={value === opt.value}
-              onClick={() => { onChange(opt.value); onToggle(); }}
+              aria-selected={value === option.value}
+              onClick={() => { onChange(option.value); onToggle(); }}
               className={cn(
                 "flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-ink hover:bg-brand-50 hover:text-brand-700 transition-colors",
-                value === opt.value && "bg-brand-50 text-brand-700 font-semibold",
+                value === option.value && "bg-brand-50 text-brand-700 font-semibold",
               )}
             >
-              {showFlags && getCountryFlagUrl(opt.value) ? (
+              {showFlags && getCountryFlagUrl(option.value) ? (
                 <img
-                  src={getCountryFlagUrl(opt.value) ?? undefined}
-                  alt={`${opt.value} flag`}
+                  src={getCountryFlagUrl(option.value) ?? undefined}
+                  alt={`${option.value} flag`}
                   width={18}
                   height={14}
                   className="h-3.5 w-[18px] shrink-0 rounded-[2px] object-cover"
                 />
               ) : null}
-              <span>{opt.label}</span>
+              {showLanguageIcon ? <LanguageIcon className="h-3.5 w-3.5 shrink-0 text-ink-soft" /> : null}
+              <span>{option.label}</span>
             </button>
           ))}
         </div>
@@ -742,7 +764,7 @@ function DropdownMenu({
         {items.map((m) => (
           <li key={m.labelKey}>
             <Link
-              href={item.href}
+              href={m.href}
               role="menuitem"
               className="flex items-center gap-2 px-4 py-2.5 text-[14px] font-medium text-ink hover:bg-brand-50 hover:text-brand-700"
             >
