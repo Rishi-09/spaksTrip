@@ -173,7 +173,7 @@ function FlightResultsInner() {
         onClose={() => setMobileFilters(false)}
         title="Filters"
         side="left"
-        width="340px"
+        width="min(340px, 92vw)"
         footer={
           <Button fullWidth onClick={() => setMobileFilters(false)}>
             Show {filtered.length} flights

@@ -296,7 +296,7 @@ export default function Header() {
       <div className="border-b border-border-soft">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6">
           <Logo />
-          <nav className="hidden lg:block">
+          <nav className="hidden md:block">
             <ul className="flex items-center gap-7 text-[14px] font-semibold text-ink">
               {NAV_ITEMS.map((item) => (
                 <li key={item.labelKey} className="group/nav relative">
@@ -337,7 +337,7 @@ export default function Header() {
                 return next;
               });
             }}
-            className="grid h-10 w-10 place-items-center rounded-md text-ink hover:bg-surface-muted lg:hidden"
+            className="md:hidden grid h-10 w-10 place-items-center rounded-md text-ink hover:bg-surface-muted"
           >
             <svg viewBox="0 0 24 24" width={20} height={20} fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" aria-hidden>
               {mobileOpen ? (
@@ -357,8 +357,11 @@ export default function Header() {
         </div>
       </div>
 
-      {mobileOpen ? (
-        <nav className="max-h-[70vh] overflow-y-auto border-b border-border-soft bg-white scrollbar-thin lg:hidden">
+      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} defaultTab={authTab} />
+
+      {mobileOpen && (
+        <nav className="md:hidden border-b border-border-soft bg-white max-h-[70vh] overflow-y-auto scrollbar-thin">
+          {/* Mobile selectors row */}
           <div className="grid grid-cols-3 gap-2 border-b border-border-soft/60 px-4 py-3 sm:px-6">
             <MobileSelect label={t("header.country")} options={COUNTRIES.map((c) => ({ value: c, label: c }))} value={country} onChange={setCountry} showFlag />
             <MobileCurrencySelect value={selectedCurrency} onChange={setSelectedCurrency} label={t("header.currency")} />

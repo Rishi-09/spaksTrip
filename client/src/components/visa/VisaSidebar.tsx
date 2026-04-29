@@ -21,7 +21,7 @@ export default function VisaSidebar({
   showTags?: boolean;
 }) {
   return (
-    <aside className="w-72 shrink-0 flex flex-col gap-6">
+    <aside className="w-full md:w-72 shrink-0 flex flex-col gap-6">
       {/* Type of Visa */}
       <div className="rounded-xl border border-zinc-200 p-5">
         <div className="flex items-center gap-2 mb-4">

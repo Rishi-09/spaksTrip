@@ -165,6 +165,7 @@ export default function InsurancePlansTable() {
         open={!!selectedPlan}
         onClose={() => setSelectedPlan(null)}
         side="right"
+        width="min(420px, 92vw)"
         title={`Buy ${selectedPlan?.name ?? ""} Plan`}
       >
         {selectedPlan && (

@@ -9,13 +9,14 @@ export default function PackageListCard({ pkg }: Props) {
   const detailsHref = `/${pkg.categoryType}-tour-details/${pkg.id}`;
 
   return (
-    <article className="flex gap-4 rounded-xl border border-border-soft bg-white shadow-sm overflow-hidden">
+    {/* Stack image above content on small screens to prevent horizontal overflow */}
+    <article className="flex flex-col md:flex-row gap-4 rounded-xl border border-border-soft bg-white shadow-sm overflow-hidden">
       {/* Image */}
-      <div className="w-[260px] shrink-0 overflow-hidden">
+      <div className="w-full md:w-[260px] shrink-0 overflow-hidden">
         <img
           src={pkg.image}
           alt={pkg.title}
-          className="h-full w-full object-cover"
+          className="w-full h-auto md:h-full object-cover"
           loading="lazy"
         />
       </div>
