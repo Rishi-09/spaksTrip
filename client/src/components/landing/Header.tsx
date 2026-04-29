@@ -357,8 +357,6 @@ export default function Header() {
         </div>
       </div>
 
-      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} defaultTab={authTab} />
-
       {mobileOpen && (
         <nav className="md:hidden border-b border-border-soft bg-white max-h-[70vh] overflow-y-auto scrollbar-thin">
           {/* Mobile selectors row */}
@@ -467,7 +465,7 @@ export default function Header() {
             )}
           </div>
         </nav>
-      ) : null}
+      )}
     </header>
   );
 }
