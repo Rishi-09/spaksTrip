@@ -7,6 +7,11 @@ import { useTranslate } from "@tolgee/react";
 import Logo from "./Logo";
 import { cn } from "@/lib/cn";
 import RoleGate from "@/components/auth/RoleGate";
+import {
+  ADD_YOUR_TAXI_ROUTE,
+  getTaxiPackageHref,
+  isTaxiManagerRole,
+} from "@/lib/taxiRoles";
 import { useAuthStore } from "@/state/authStore";
 import { useLocaleStore, useCountryLocale } from "@/state/localeStore";
 import { getCountryFlagUrl } from "@/lib/countryFlags";
@@ -60,7 +65,7 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     labelKey: "nav.transport",
-    href: "#",
+    href: "/taxi-package",
     menu: [
       { labelKey: "nav.taxi_package", href: "/taxi-package" },
       { labelKey: "nav.cabs", href: "/cabs" },
@@ -152,11 +157,34 @@ export default function Header() {
   const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>(
     currency === "USD" ? "USD" : "INR",
   );
+  const taxiPackageHref = getTaxiPackageHref(user?.role);
 
   const languageOptionLabels = useMemo(
     () => LANGUAGE_OPTIONS.map((opt) => ({ value: opt.name, label: t(opt.key) })),
     [t],
   );
+
+  const navItems = useMemo(() => {
+    const transportMenu = [
+      ...(isTaxiManagerRole(user?.role)
+        ? [{ labelKey: "nav.add_your_taxi", href: ADD_YOUR_TAXI_ROUTE }]
+        : []),
+      { labelKey: "nav.taxi_packages", href: taxiPackageHref },
+      { labelKey: "nav.cabs", href: "/cabs" },
+      { labelKey: "nav.tour_bus", href: "/tour-bus" },
+      { labelKey: "nav.train", href: "/train/search" },
+    ];
+
+    return NAV_ITEMS.map((item) =>
+      item.labelKey === "nav.transport"
+        ? {
+            ...item,
+            href: taxiPackageHref,
+            menu: transportMenu,
+          }
+        : item,
+    );
+  }, [taxiPackageHref, user?.role]);
 
   const toggleMobileSection = (label: string) => {
     setMobileExpanded((current) => (current === label ? null : label));
@@ -307,7 +335,7 @@ export default function Header() {
           {/* CHANGE: centered alignment within the grid */}
           <nav className="hidden lg:block justify-self-center">
             <ul className="flex items-center gap-7 text-[14px] font-semibold text-ink">
-              {NAV_ITEMS.map((item) => (
+              {navItems.map((item) => (
                 <li key={item.labelKey} className="group/nav relative">
                   <Link
                     href={item.href}
@@ -376,7 +404,7 @@ export default function Header() {
           </div>
 
           <ul className="flex flex-col py-2">
-            {NAV_ITEMS.map((item) => {
+            {navItems.map((item) => {
               const itemLabel = t(item.labelKey);
               return (
                 <li key={item.labelKey}>
