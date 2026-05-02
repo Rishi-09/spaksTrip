@@ -3,11 +3,6 @@ import { assertTboSuccess, TboInvalidSessionError } from "./errors";
 import { logRequest, logResponse, logError } from "./log";
 import type { TboAuthResponse } from "./types";
 
-// Endpoint copied verbatim from Authentication.html:
-//   <a href="http://sharedapi.tektravels.com/SharedData.svc/rest/Authenticate">
-const TBO_AUTHENTICATE_URL =
-  "http://sharedapi.tektravels.com/SharedData.svc/rest/Authenticate";
-
 // Per HTML FAQ Q3: token is valid from 00:00:00 till 23:59:59 of the current
 // day. Bullet on the page also notes "After 12:02 AM no new booking with old
 // token." So we expire the cache at end-of-day, with a small safety buffer.
@@ -33,26 +28,32 @@ function getBaseUrl(): string {
   return url.replace(/\/$/, "");
 }
 
-function normalizeTboHost(url: string, fallbackHost: string): string {
-  try {
-    const parsed = new URL(url);
-    if (parsed.hostname === "b2b.tektravels.com") {
-      parsed.hostname = fallbackHost;
-      return parsed.toString().replace(/\/$/, "");
-    }
-    return parsed.toString().replace(/\/$/, "");
-  } catch {
-    return url.replace(/\/$/, "");
-  }
-}
-
-function getServiceBaseUrl(
-  envKey: string,
-  fallbackHost: string,
-): string {
+/**
+ * Returns the base URL for a given TBO service.
+ *
+ * Priority: explicit env var (e.g. TBO_SHARED_API_URL) → derive from TBO_API_URL
+ * keeping its protocol but replacing the hostname with the service-specific host.
+ *
+ * TBO hosts per service:
+ *   shared → sharedapi.tektravels.com  (/SharedData.svc/rest/...)
+ *   air    → api.tektravels.com        (/BookingEngineService_Air/...)
+ *   hotel  → api.tektravels.com        (/HotelAPI/...)
+ *
+ * This ensures that regardless of whether TBO_API_URL is set to
+ * api.tektravels.com, b2b.tektravels.com, or any other host, each service
+ * always reaches the correct endpoint.
+ */
+function getServiceBaseUrl(envKey: string, fallbackHost: string): string {
   const explicit = process.env[envKey];
   if (explicit) return explicit.replace(/\/$/, "");
-  return normalizeTboHost(getBaseUrl(), fallbackHost);
+  const base = getBaseUrl();
+  try {
+    const parsed = new URL(base);
+    parsed.hostname = fallbackHost;
+    return parsed.toString().replace(/\/$/, "");
+  } catch {
+    return `https://${fallbackHost}`;
+  }
 }
 
 export function tboApiUrl(

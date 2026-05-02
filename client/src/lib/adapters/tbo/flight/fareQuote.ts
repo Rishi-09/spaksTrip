@@ -3,10 +3,15 @@ import { withRetry, tboBase, tboApiUrl } from "../auth";
 import { assertTboSuccess, TboFareExpiredError } from "../errors";
 import { getTrace, storeTrace } from "../traceCache";
 import { logRequest, logResponse, logError } from "../log";
-import type { TboFareQuoteResponse, TboFlightResult, TboSegmentGroup, TboFareFamily } from "../types";
+import type {
+  TboFareQuoteResponse,
+  TboFlightResult,
+  TboSegmentGroup,
+  TboFareFamily,
+  TboFareBreakdown,
+} from "../types";
 import type { FlightOffer, FlightSegment, FareFamily, CabinClass } from "@/lib/mock/flights";
 
-// Cabin map mirrors flight/search.ts (TBO 2/3/4/6 → frontend ECONOMY/PREMIUM_ECONOMY/BUSINESS/FIRST)
 const TBO_CABIN_TO_FRONTEND: Record<number, CabinClass> = {
   2: "ECONOMY",
   3: "PREMIUM_ECONOMY",
@@ -62,19 +67,17 @@ function mapFareFamilies(
       priceDelta: i === 0 ? 0 : Math.round(basePrice * 0.12 * i),
     }));
   }
-  return [
-    {
-      id: "standard",
-      name: "Standard",
-      baggageCabin,
-      baggageCheckin,
-      refundable,
-      changeable: refundable,
-      mealIncluded: false,
-      seatSelection: "paid" as const,
-      priceDelta: 0,
-    },
-  ];
+  return [{
+    id: "standard",
+    name: "Standard",
+    baggageCabin,
+    baggageCheckin,
+    refundable,
+    changeable: refundable,
+    mealIncluded: false,
+    seatSelection: "paid" as const,
+    priceDelta: 0,
+  }];
 }
 
 function resultToOffer(result: TboFlightResult): FlightOffer {
@@ -89,7 +92,8 @@ function resultToOffer(result: TboFlightResult): FlightOffer {
   const cabin: CabinClass = TBO_CABIN_TO_FRONTEND[cabinNum] ?? "ECONOMY";
   const baggageCheckin = parseBaggageKg(outboundSegs[0]?.Baggage);
   const baggageCabin = parseBaggageKg(outboundSegs[0]?.CabinBaggage);
-  const basePrice = result.Fare?.OfferedFare ?? result.Fare?.PublishedFare ?? 0;
+  // Use PublishedFare consistently — it is the customer-facing price.
+  const basePrice = result.Fare?.PublishedFare ?? 0;
 
   return {
     id: result.ResultIndex,
@@ -114,14 +118,28 @@ function resultToOffer(result: TboFlightResult): FlightOffer {
 
 export interface FareQuoteResult {
   resultIndex: string;
+  /** The (possibly refreshed) TraceId from TBO — pass this explicitly in all
+   *  subsequent requests (book, ticket) to avoid serverless traceCache misses. */
+  traceId: string;
   totalFare: number;
   isPriceChanged: boolean;
   isTimeChanged: boolean;
+  /** True for LCC airlines (IndiGo, SpiceJet, etc.) — determines whether
+   *  the booking flow calls /Ticket directly or /Book then /Ticket. */
+  isLCC: boolean;
+  /** Per-pax-type aggregates from TBO FareBreakdown.
+   *  Must be passed to book/ticket so each passenger receives the correct Fare node. */
+  fareBreakdown: TboFareBreakdown[];
   updatedOffer?: FlightOffer;
 }
 
-export async function tboFareQuote(resultIndex: string): Promise<FareQuoteResult> {
-  const traceId = getTrace(resultIndex);
+export async function tboFareQuote(
+  resultIndex: string,
+  /** Explicit TraceId — required in serverless environments where the in-process
+   *  traceCache may not be populated (different function instance than Search). */
+  explicitTraceId?: string,
+): Promise<FareQuoteResult> {
+  const traceId = explicitTraceId ?? getTrace(resultIndex);
   if (!traceId) throw new TboFareExpiredError();
 
   return withRetry(async (token) => {
@@ -151,20 +169,24 @@ export async function tboFareQuote(resultIndex: string): Promise<FareQuoteResult
     assertTboSuccess(data.Response?.Error);
 
     const result = data.Response?.Results;
-    const isPriceChanged = data.Response?.IsPriceChanged ?? false;
-    const isTimeChanged = data.Response?.IsTimeChanged ?? false;
-    const newTraceId = data.Response?.TraceId;
-
     if (!result) throw new TboFareExpiredError();
 
-    if (newTraceId) storeTrace(result.ResultIndex, newTraceId);
+    const isPriceChanged = data.Response?.IsPriceChanged ?? false;
+    const isTimeChanged = data.Response?.IsTimeChanged ?? false;
+    const refreshedTraceId = data.Response?.TraceId ?? traceId;
+
+    // Refresh the in-process cache (helps local dev / single-instance deploys).
+    storeTrace(result.ResultIndex, refreshedTraceId);
 
     return {
       resultIndex: result.ResultIndex,
-      totalFare: result.Fare?.OfferedFare ?? result.Fare?.PublishedFare ?? 0,
+      traceId: refreshedTraceId,
+      totalFare: result.Fare?.PublishedFare ?? 0,
       isPriceChanged,
       isTimeChanged,
-      updatedOffer: isPriceChanged || isTimeChanged ? resultToOffer(result) : resultToOffer(result),
+      isLCC: result.IsLCC,
+      fareBreakdown: result.FareBreakdown ?? [],
+      updatedOffer: resultToOffer(result),
     };
   });
 }
