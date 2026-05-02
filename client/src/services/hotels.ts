@@ -6,7 +6,7 @@ import {
 } from "@/lib/mock/hotels";
 import { sleep } from "./delay";
 
-// TBO is the only data source for hotels. Mock fallback removed per integration spec.
+// TBO is the only data source for hotels. Fallback inventory has been removed.
 // All calls go through Next.js /api/hotels/* routes which proxy to the TBO B2B API.
 
 export type { Amenity, Hotel, HotelSearchInput };

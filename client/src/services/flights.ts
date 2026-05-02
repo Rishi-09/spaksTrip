@@ -6,7 +6,7 @@ import {
 import { searchAirports, type Airport } from "@/lib/mock/airports";
 import { jitter, sleep } from "./delay";
 
-// TBO is the only data source for flights. Mock fallback removed per integration spec.
+// TBO is the only data source for flights. Fallback inventory has been removed.
 // All calls go through Next.js /api/flights/* routes which proxy to the TBO B2B API
 // server-side (credentials never leave the server).
 

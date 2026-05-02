@@ -4,7 +4,6 @@ import { Suspense, useEffect, useState } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
-import Badge from "@/components/ui/Badge";
 import Skeleton from "@/components/ui/Skeleton";
 import { formatINR } from "@/lib/format";
 import { getSightseeingPackage } from "@/services/taxi";
@@ -78,13 +77,6 @@ function Inner() {
     setTravelers((prev) => prev.map((t, i) => i === idx ? { name } : t));
   }
 
-  function calcTotal() {
-    if (!pkg) return 0;
-    const base = pkg.pricePerPerson * pax;
-    const guide = privateGuide ? 800 : 0;
-    return base + guide + Math.round((base + guide) * 0.05);
-  }
-
   async function handleBook(e: React.FormEvent) {
     e.preventDefault();
     if (!pkg) return;
@@ -110,7 +102,7 @@ function Inner() {
   if (!pkg) return (
     <div className="min-h-screen flex flex-col bg-surface-muted">
       <Header />
-      <main className="flex-1 flex items-center justify-center"><p className="text-ink-muted">Tour package not found.</p></main>
+      <main className="flex-1 flex items-center justify-center"><p className="text-ink-muted">Sightseeing booking is currently unavailable.</p></main>
       <Footer />
     </div>
   );

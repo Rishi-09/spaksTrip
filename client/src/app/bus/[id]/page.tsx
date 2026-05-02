@@ -268,7 +268,7 @@ export default function BusDetailPage() {
                 <div>
                   <h2 className="text-[18px] font-extrabold text-ink">Select Your Seats</h2>
                   <p className="mt-1 text-[13px] text-ink-muted">
-                    Choose from the live mock layout. Booked seats are already locked.
+                    Seat selection will appear here when live bus seat maps are available.
                   </p>
                 </div>
                 <BusSeatLegend />
@@ -316,10 +316,10 @@ export default function BusDetailPage() {
               loading={submitting}
               disabled={selectedSeatNumbers.length === 0}
             >
-              Confirm Mock Booking
+              Confirm Booking
             </Button>
             <p className="rounded-xl bg-warn-50 px-4 py-3 text-[12px] font-medium text-warn-600">
-              This is a simulation flow. Later, only the bus service layer needs to change for TBO integration.
+              Bus booking is currently unavailable until live inventory is connected.
             </p>
           </div>
         </div>

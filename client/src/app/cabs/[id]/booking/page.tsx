@@ -76,7 +76,7 @@ function CabBookingInner() {
       <div className="min-h-screen flex flex-col bg-surface-muted">
         <Header />
         <main className="flex-1 grid place-items-center p-8">
-          <p className="text-[15px] font-semibold text-ink">Cab not found</p>
+          <p className="text-[15px] font-semibold text-ink">Cab booking is currently unavailable.</p>
         </main>
         <Footer />
       </div>
@@ -151,7 +151,7 @@ function CabBookingInner() {
               <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
               <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
-            Demo — no real booking will be made.
+            Live cab booking is not available on this flow yet.
           </div>
 
           <Button variant="accent" size="xl" onClick={onBook} loading={submitting} fullWidth>

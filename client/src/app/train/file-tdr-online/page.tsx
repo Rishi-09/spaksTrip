@@ -104,14 +104,14 @@ export default function TrainTdrPage() {
                 rows={6}
                 value={details}
                 onChange={(event) => setDetails(event.target.value)}
-                placeholder="Add delay details, no-travel context, or any coach issue notes for this mock TDR submission."
+                placeholder="Add delay details, no-travel context, or any coach issue notes for this TDR submission."
                 className="rounded-xl border border-border bg-white px-3 py-3 text-[14px] text-ink outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
               />
             </label>
 
             {submitted ? (
               <div className="mt-4 rounded-xl border border-success-200 bg-success-50 px-4 py-3 text-[13px] text-success-700">
-                Mock TDR request submitted. The page is now discoverable from the train menu instead of living outside the train flow.
+                TDR request submitted. The page is now discoverable from the train menu instead of living outside the train flow.
               </div>
             ) : null}
 

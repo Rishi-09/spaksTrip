@@ -81,7 +81,7 @@ export default function BusSearchForm({
 
       <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-wrap gap-2 text-[12px] text-ink-muted">
-          {["Live seat map", "Boarding details", "Mock booking flow"].map((item) => (
+          {["Seat map", "Boarding details", "Live inventory required"].map((item) => (
             <span key={item} className="rounded-full bg-brand-50 px-3 py-1 font-medium text-brand-700">
               {item}
             </span>

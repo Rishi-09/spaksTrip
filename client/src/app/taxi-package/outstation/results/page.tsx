@@ -7,9 +7,9 @@ import Footer from "@/components/landing/Footer";
 import OutstationCard from "@/components/transport/OutstationCard";
 import Chip from "@/components/ui/Chip";
 import Skeleton from "@/components/ui/Skeleton";
-import EmptyState from "@/components/ui/EmptyState";
 import { searchOutstationOffers, searchCityOptions } from "@/services/taxi";
 import type { OutstationOffer, OutstationVehicle, TripType } from "@/lib/mock/taxi";
+import InventoryUnavailable from "@/components/shared/InventoryUnavailable";
 
 export default function OutstationResultsPage() {
   return (
@@ -50,17 +50,47 @@ function Inner() {
   const pax = parseInt(sp.get("pax") ?? "1", 10);
   const returnDate = sp.get("returnDate") ?? undefined;
 
+  return (
+    <OutstationResultsContent
+      key={`${fromCity}-${toCity}-${date}-${tripType}-${pax}-${returnDate ?? ""}`}
+      fromCity={fromCity}
+      toCity={toCity}
+      date={date}
+      tripType={tripType}
+      pax={pax}
+      returnDate={returnDate}
+      searchQs={sp.toString()}
+    />
+  );
+}
+
+function OutstationResultsContent({
+  fromCity,
+  toCity,
+  date,
+  tripType,
+  pax,
+  returnDate,
+  searchQs,
+}: {
+  fromCity: string;
+  toCity: string;
+  date: string;
+  tripType: TripType;
+  pax: number;
+  returnDate?: string;
+  searchQs: string;
+}) {
+
   const [offers, setOffers] = useState<OutstationOffer[]>([]);
   const [loading, setLoading] = useState(true);
   const [vehicleFilter, setVehicleFilter] = useState<OutstationVehicle | "all">("all");
   const [sortBy, setSortBy] = useState<SortBy>("price");
 
-  const searchQs = sp.toString();
   const fromInfo = searchCityOptions(fromCity)[0];
   const toInfo = searchCityOptions(toCity)[0];
 
   useEffect(() => {
-    setLoading(true);
     searchOutstationOffers({ fromCity, toCity, date, tripType, pax, returnDate }).then((res) => {
       setOffers(res);
       setLoading(false);
@@ -124,14 +154,11 @@ function Inner() {
           <div className="flex flex-col gap-3" aria-live="polite">
             {displayed.length === 0 ? (
               <div className="rounded-xl bg-white border border-border-soft">
-                <EmptyState
-                  title="No cabs found"
-                  subtitle="Try a different vehicle type filter."
-                  cta={
-                    <button type="button" onClick={() => setVehicleFilter("all")} className="rounded-lg bg-brand-600 px-5 py-2 text-[13px] font-semibold text-white hover:bg-brand-700 transition-colors">
-                      Show all vehicles
-                    </button>
-                  }
+                <InventoryUnavailable
+                  title="Outstation cab inventory is currently unavailable"
+                  subtitle="This flow no longer shows generated outstation vehicles. Connect a live provider to restore results."
+                  href="/taxi-package"
+                  ctaLabel="Back to Taxi Services"
                 />
               </div>
             ) : (

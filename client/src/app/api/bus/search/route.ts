@@ -26,7 +26,9 @@ export async function POST(request: NextRequest) {
 
     const results = await searchBuses({ source, destination, travelDate });
     return NextResponse.json<ApiResponse<BusSearchResult[]>>({ success: true, data: results });
-  } catch {
-    return error("Unable to search buses right now.", 500);
+  } catch (caughtError) {
+    const message =
+      caughtError instanceof Error ? caughtError.message : "Unable to search buses right now.";
+    return error(message, 503);
   }
 }
