@@ -32,16 +32,8 @@ function normalizeAriaText(input: string) {
 const NAV_ITEMS: NavItem[] = [
   { labelKey: "nav.flight", href: "/flight" },
   { labelKey: "nav.hotel", href: "/hotel" },
-  {
-    labelKey: "nav.train",
-    href: "/train/search",
-    menu: [
-      { labelKey: "nav.search", href: "/train/search" },
-      { labelKey: "nav.tickets", href: "/train/tickets" },
-      { labelKey: "nav.change_request", href: "/train/change-request" },
-      { labelKey: "nav.file_tdr_online", href: "/train/file-tdr-online" },
-    ],
-  },
+  { labelKey: "Premium hotel", href: "/premium-hotel" },
+  
   {
     labelKey: "nav.holiday_packages",
     href: "#",
@@ -79,6 +71,16 @@ const NAV_ITEMS: NavItem[] = [
     menu: [
       { labelKey: "nav.cruise_for_andaman", href: "#" },
       { labelKey: "nav.general_cruise", href: "/cruise" },
+    ],
+  },
+  {
+    labelKey: "nav.train",
+    href: "/train/search",
+    menu: [
+      { labelKey: "nav.search", href: "/train/search" },
+      { labelKey: "nav.tickets", href: "/train/tickets" },
+      { labelKey: "nav.change_request", href: "/train/change-request" },
+      { labelKey: "nav.file_tdr_online", href: "/train/file-tdr-online" },
     ],
   },
   { labelKey: "nav.bus", href: "/bus" },
