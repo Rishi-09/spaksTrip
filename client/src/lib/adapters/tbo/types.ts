@@ -62,7 +62,7 @@ export interface TboAirportInfo {
 export interface TboSegmentGroup {
   Baggage: string;         // e.g. "20 Kg"
   CabinBaggage: string;    // e.g. "7 Kg"
-  CabinClass: number;      // 1=Economy, 2=PremEco, 3=Business, 4=First
+  CabinClass: number;      // TBO: 2=Economy, 3=PremiumEconomy, 4=Business, 5=PremiumBusiness, 6=First
   SupplierFareClass: string;
   TripIndicator: number;
   SegmentIndicator: number;
@@ -138,9 +138,11 @@ export interface TboFareRule {
   Origin: string;
   Destination: string;
   Airline: string;
-  FareBasis: string;
+  FareBasisCode: string;     // TBO field name is FareBasisCode, not FareBasis
   FareRuleDetail: string;    // raw text/HTML from TBO
   FareRestriction: string;
+  FareFamilyCode: string;
+  FareRuleIndex: string;
 }
 
 export interface TboFareFamily {
@@ -264,7 +266,8 @@ export interface TboPassengerRequest {
   AddressLine1: string;
   City: string;
   CountryCode: string;
-  NationalityCode: string;
+  CountryName: string;   // required — e.g. "India"
+  Nationality: string;   // ISO-2 country code — TBO field name is Nationality, not NationalityCode
   ContactNo: string;
   Email: string;
   IsLeadPax: boolean;

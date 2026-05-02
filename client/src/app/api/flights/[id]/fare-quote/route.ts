@@ -7,14 +7,18 @@ function err(message: string, status: number) {
 }
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
     if (!id) return err("id (ResultIndex) is required.", 400);
 
-    const result = await tboFareQuote(decodeURIComponent(id));
+    // Accept explicit traceId from client — required for serverless deployments
+    // where the server-side traceCache may not survive across function instances.
+    const traceId = req.nextUrl.searchParams.get("traceId") ?? undefined;
+
+    const result = await tboFareQuote(decodeURIComponent(id), traceId);
     return NextResponse.json({ success: true, data: result });
   } catch (e) {
     if (e instanceof TboFareExpiredError) {
