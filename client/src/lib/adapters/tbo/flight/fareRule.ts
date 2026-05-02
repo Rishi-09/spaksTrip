@@ -14,8 +14,11 @@ export interface FareRuleResult {
   restriction: string;
 }
 
-export async function tboGetFareRule(resultIndex: string): Promise<FareRuleResult[]> {
-  const traceId = getTrace(resultIndex);
+export async function tboGetFareRule(
+  resultIndex: string,
+  explicitTraceId?: string,
+): Promise<FareRuleResult[]> {
+  const traceId = explicitTraceId ?? getTrace(resultIndex);
   if (!traceId) throw new TboFareExpiredError();
 
   return withRetry(async (token) => {
@@ -48,7 +51,7 @@ export async function tboGetFareRule(resultIndex: string): Promise<FareRuleResul
       origin: r.Origin,
       destination: r.Destination,
       airline: r.Airline,
-      fareBasis: r.FareBasis,
+      fareBasis: r.FareBasisCode,   // TBO field is FareBasisCode not FareBasis
       detail: r.FareRuleDetail ?? "",
       restriction: r.FareRestriction ?? "",
     }));

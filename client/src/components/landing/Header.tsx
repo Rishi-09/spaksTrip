@@ -501,7 +501,7 @@ function SelectDropdown({
   showLanguageIcon?: boolean;
 }) {
   const selectedFlagUrl = showFlags ? getCountryFlagUrl(value) : null;
-  const selectedLabel = options.find((opt) => opt.value === value)?.label ?? value;
+  const selectedLabel = normalizeAriaText(options.find((opt) => opt.value === value)?.label ?? value);
 
   return (
     <div className="relative">
@@ -567,7 +567,7 @@ function SelectDropdown({
                 />
               ) : null}
               {showLanguageIcon ? <LanguageIcon className="h-3.5 w-3.5 shrink-0 text-ink-soft" /> : null}
-              <span>{option.label}</span>
+              <span>{normalizeAriaText(option.label)}</span>
             </button>
           ))}
         </div>
@@ -596,7 +596,7 @@ function MobileSelect({
 
   return (
     <label className="flex min-w-0 flex-col gap-0.5">
-      <span className="text-[10px] font-medium uppercase tracking-wide text-ink-soft">{label}</span>
+      <span className="text-[10px] font-medium uppercase tracking-wide text-ink-soft">{normalizeAriaText(label)}</span>
       <span className="relative">
         {flagUrl ? (
           <img
@@ -619,7 +619,7 @@ function MobileSelect({
           )}
         >
           {options.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
+            <option key={opt.value} value={opt.value}>{normalizeAriaText(opt.label)}</option>
           ))}
         </select>
       </span>

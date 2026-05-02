@@ -14,6 +14,9 @@ export async function POST(request: NextRequest) {
     if (!body?.resultIndex) return err("resultIndex is required.", 400);
     if (!body?.passengers?.length) return err("At least one passenger is required.", 400);
     if (!body?.contactEmail) return err("contactEmail is required.", 400);
+    if (!body?.fareBreakdown?.length) {
+      return err("fareBreakdown is required (from FareQuote response).", 400);
+    }
 
     const result = await tboBookFlight(body);
     return NextResponse.json({ success: true, data: result });

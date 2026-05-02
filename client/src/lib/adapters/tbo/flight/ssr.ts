@@ -20,8 +20,11 @@ export interface SSRResult {
 // SSR codes prefixed with "ML" are meals; "SD" are dynamic seats.
 // TBO does not always return both — handle empty arrays gracefully.
 
-export async function tboGetSSR(resultIndex: string): Promise<SSRResult> {
-  const traceId = getTrace(resultIndex);
+export async function tboGetSSR(
+  resultIndex: string,
+  explicitTraceId?: string,
+): Promise<SSRResult> {
+  const traceId = explicitTraceId ?? getTrace(resultIndex);
   if (!traceId) throw new TboFareExpiredError();
 
   return withRetry(async (token) => {
