@@ -3,6 +3,7 @@
 import { useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AuthForm from "@/components/auth/AuthForm";
+import { isBusinessUser } from "@/lib/authRoles";
 import { useAuthStore } from "@/state/authStore";
 
 export default function AuthContent() {
@@ -23,7 +24,7 @@ export default function AuthContent() {
 
   useEffect(() => {
     if (status !== "ready" || !user) return;
-    router.replace(user.role === "partner" ? "/partner/dashboard" : "/");
+    router.replace(isBusinessUser(user.role) ? "/partner/dashboard" : "/");
   }, [router, status, user]);
 
   const subtitle = useMemo(() => {
@@ -31,7 +32,7 @@ export default function AuthContent() {
       return "Create one account, pick the right role, and we will route you to the correct experience.";
     }
 
-    return "Sign in once and we will send you to your trips or your partner workspace.";
+    return "Sign in once and we will send you to your trips or your business workspace.";
   }, [initialMode]);
 
   return (
@@ -44,7 +45,7 @@ export default function AuthContent() {
                 Unified Access
               </p>
               <h1 className="max-w-sm text-4xl font-black leading-tight">
-                One auth gateway for customers and partners.
+                One auth gateway for customers, partners, and agents.
               </h1>
               <p className="max-w-md text-sm leading-6 text-white/75">
                 Choose your role, finish the flow, and we will drop you into
@@ -58,8 +59,8 @@ export default function AuthContent() {
                 backend as-is.
               </div>
               <div className="rounded-2xl border border-white/12 bg-white/6 px-4 py-3">
-                Customers land on the travel app. Partners land on the
-                dashboard.
+                Customers land on the travel app. Partners and agents land on
+                the dashboard.
               </div>
             </div>
           </section>
@@ -82,7 +83,7 @@ export default function AuthContent() {
                 }
 
                 router.replace(
-                  authenticatedUser.role === "partner"
+                  isBusinessUser(authenticatedUser.role)
                     ? "/partner/dashboard"
                     : "/",
                 );

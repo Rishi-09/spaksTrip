@@ -7,22 +7,30 @@ import { useTranslate } from "@tolgee/react";
 import Logo from "./Logo";
 import { cn } from "@/lib/cn";
 import RoleGate from "@/components/auth/RoleGate";
+import { isBusinessUser } from "@/lib/authRoles";
 import { useAuthStore } from "@/state/authStore";
 import { useLocaleStore, useCountryLocale } from "@/state/localeStore";
 import { getCountryFlagUrl } from "@/lib/countryFlags";
 
-type NavItem = {
-  labelKey: string;
+type NavLink = {
+  labelKey?: string;
+  label?: string;
   href: string;
-  menu?: { labelKey: string; href: string }[];
 };
 
-// Hydration-safe aria-label normalization:
-// Some i18n labels can include zero-width characters that differ between SSR and client.
-// Strip them so `aria-label` props are identical across hydration.
+type NavItem = NavLink & {
+  menu?: NavLink[];
+};
+
 function normalizeAriaText(input: string) {
   return input.replace(/[\u200B-\u200D\uFEFF]/g, "");
 }
+
+const STATIC_TRANSPORT_ITEMS: NavLink[] = [
+  { labelKey: "nav.cabs", href: "/cabs" },
+  { labelKey: "nav.tour_bus", href: "/tour-bus" },
+  { labelKey: "nav.train", href: "/train/search" },
+];
 
 const NAV_ITEMS: NavItem[] = [
   { labelKey: "nav.flight", href: "/flight" },
@@ -61,12 +69,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     labelKey: "nav.transport",
     href: "#",
-    menu: [
-      { labelKey: "nav.taxi_package", href: "/taxi-package" },
-      { labelKey: "nav.cabs", href: "/cabs" },
-      { labelKey: "nav.tour_bus", href: "/tour-bus" },
-      { labelKey: "nav.train", href: "/train/search" },
-    ],
+    menu: STATIC_TRANSPORT_ITEMS,
   },
   {
     labelKey: "nav.cruise",
@@ -127,12 +130,11 @@ const LANGUAGE_OPTIONS: { name: string; key: string }[] = [
 ];
 
 const CURRENCY_OPTIONS = [
-  { value: "INR", symbol: "₹" },
+  { value: "INR", symbol: "Rs" },
   { value: "USD", symbol: "$" },
 ] as const;
 
 type CurrencyCode = (typeof CURRENCY_OPTIONS)[number]["value"];
-
 type OpenDropdown = "country" | "currency" | "language" | "user" | null;
 
 export default function Header() {
@@ -158,6 +160,24 @@ export default function Header() {
     [t],
   );
 
+  const navItems = useMemo(() => {
+    const taxiItems: NavLink[] =
+      user?.role === "customer"
+        ? [{ label: "Taxi Packages", href: "/taxi-package/destinations" }]
+        : isBusinessUser(user?.role)
+          ? [
+              { label: "Add Your Taxi", href: "/taxi-package/add-your-taxi" },
+              { label: "Taxi Packages", href: "/taxi-package/destinations" },
+            ]
+          : [{ labelKey: "nav.taxi_package", href: "/taxi-package" }];
+
+    return NAV_ITEMS.map((item) =>
+      item.labelKey === "nav.transport"
+        ? { ...item, menu: [...taxiItems, ...STATIC_TRANSPORT_ITEMS] }
+        : item,
+    );
+  }, [user?.role]);
+
   const toggleMobileSection = (label: string) => {
     setMobileExpanded((current) => (current === label ? null : label));
   };
@@ -181,7 +201,7 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handleOutside);
   }, [openDropdown]);
 
-  const profileHref = user?.role === "partner" ? "/partner/dashboard" : "/my-trips";
+  const profileHref = isBusinessUser(user?.role) ? "/partner/dashboard" : "/my-trips";
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white shadow-(--shadow-xs)">
@@ -213,7 +233,7 @@ export default function Header() {
                 onToggle={() => toggleDropdown("country")}
                 showFlags
               />
-              <span className="text-white/30 select-none">|</span>
+              <span className="select-none text-white/30">|</span>
               <CurrencyDropdown
                 value={selectedCurrency}
                 onChange={setSelectedCurrency}
@@ -221,7 +241,7 @@ export default function Header() {
                 onToggle={() => toggleDropdown("currency")}
                 ariaLabel={t("header.currency")}
               />
-              <span className="text-white/30 select-none">|</span>
+              <span className="select-none text-white/30">|</span>
               <SelectDropdown
                 label={t("header.language")}
                 options={languageOptionLabels}
@@ -241,7 +261,7 @@ export default function Header() {
                 >
                   {t("header.my_trips")}
                 </Link>
-                <span className="text-white/50">·</span>
+                <span className="text-white/50">.</span>
                 <button
                   type="button"
                   onClick={() => toggleDropdown("user")}
@@ -301,19 +321,17 @@ export default function Header() {
       </div>
 
       <div className="border-b border-border-soft">
-        {/* CHANGE: grid layout to keep Logo left and Navigation centered (hamburger stays right) */}
         <div className="mx-auto st-header-main-nav-inner max-w-7xl px-4 py-3.5 sm:px-6">
           <Logo />
-          {/* CHANGE: centered alignment within the grid */}
-          <nav className="hidden lg:block justify-self-center">
+          <nav className="hidden justify-self-center lg:block">
             <ul className="flex items-center gap-7 text-[14px] font-semibold text-ink">
-              {NAV_ITEMS.map((item) => (
-                <li key={item.labelKey} className="group/nav relative">
+              {navItems.map((item) => (
+                <li key={item.label ?? item.labelKey} className="group/nav relative">
                   <Link
                     href={item.href}
                     className="inline-flex items-center gap-1 py-2 transition-colors group-hover/nav:text-brand-700"
                   >
-                    {t(item.labelKey)}
+                    {resolveLabel(item, t)}
                     {item.menu ? (
                       <svg
                         viewBox="0 0 24 24"
@@ -346,7 +364,7 @@ export default function Header() {
                 return next;
               });
             }}
-            className="lg:hidden grid h-10 w-10 place-items-center rounded-md text-ink hover:bg-surface-muted justify-self-end"
+            className="grid h-10 w-10 place-items-center justify-self-end rounded-md text-ink hover:bg-surface-muted lg:hidden"
           >
             <svg viewBox="0 0 24 24" width={20} height={20} fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" aria-hidden>
               {mobileOpen ? (
@@ -367,8 +385,7 @@ export default function Header() {
       </div>
 
       {mobileOpen && (
-        <nav className="lg:hidden border-b border-border-soft bg-white max-h-[70vh] overflow-y-auto scrollbar-thin">
-          {/* Mobile selectors row */}
+        <nav className="max-h-[70vh] overflow-y-auto border-b border-border-soft bg-white scrollbar-thin lg:hidden">
           <div className="grid grid-cols-3 gap-2 border-b border-border-soft/60 px-4 py-3 sm:px-6">
             <MobileSelect label={t("header.country")} options={COUNTRIES.map((c) => ({ value: c, label: c }))} value={country} onChange={setCountry} showFlag />
             <MobileCurrencySelect value={selectedCurrency} onChange={setSelectedCurrency} label={t("header.currency")} />
@@ -376,18 +393,20 @@ export default function Header() {
           </div>
 
           <ul className="flex flex-col py-2">
-            {NAV_ITEMS.map((item) => {
-              const itemLabel = t(item.labelKey);
+            {navItems.map((item) => {
+              const itemKey = item.label ?? item.labelKey ?? item.href;
+              const itemLabel = resolveLabel(item, t);
+
               return (
-                <li key={item.labelKey}>
+                <li key={itemKey}>
                   {item.menu ? (
                     <div className="flex items-center justify-between border-b border-border-soft/60 px-4 py-3 sm:px-6">
                       <span className="text-[14px] font-semibold text-ink">{itemLabel}</span>
                       <button
                         type="button"
                         aria-label={t("header.toggle_section_menu", { label: itemLabel })}
-                        aria-expanded={mobileExpanded === item.labelKey}
-                        onClick={() => toggleMobileSection(item.labelKey)}
+                        aria-expanded={mobileExpanded === itemKey}
+                        onClick={() => toggleMobileSection(itemKey)}
                         className="grid h-8 w-8 place-items-center rounded-md text-ink hover:bg-surface-muted"
                       >
                         <svg
@@ -400,10 +419,7 @@ export default function Header() {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           aria-hidden
-                          className={cn(
-                            "transition-transform",
-                            mobileExpanded === item.labelKey && "rotate-180",
-                          )}
+                          className={cn("transition-transform", mobileExpanded === itemKey && "rotate-180")}
                         >
                           <polyline points="6 9 12 15 18 9" />
                         </svg>
@@ -418,19 +434,20 @@ export default function Header() {
                       {itemLabel}
                     </Link>
                   )}
-                  {item.menu && mobileExpanded === item.labelKey ? (
+
+                  {item.menu && mobileExpanded === itemKey ? (
                     <ul className="bg-surface-muted">
-                      {item.menu.map((m) => (
-                        <li key={m.labelKey}>
+                      {item.menu.map((menuItem) => (
+                        <li key={menuItem.label ?? menuItem.labelKey ?? menuItem.href}>
                           <Link
-                            href={m.href}
+                            href={menuItem.href}
                             className="block px-8 py-2.5 text-[13px] text-ink-soft hover:text-brand-700 sm:px-10"
                             onClick={() => {
                               setMobileOpen(false);
                               setMobileExpanded(null);
                             }}
                           >
-                            {t(m.labelKey)}
+                            {resolveLabel(menuItem, t)}
                           </Link>
                         </li>
                       ))}
@@ -479,6 +496,10 @@ export default function Header() {
   );
 }
 
+function resolveLabel(item: NavLink, t: (key: string) => string): string {
+  return item.label ?? t(item.labelKey ?? "");
+}
+
 type Option = { value: string; label: string };
 
 function SelectDropdown({
@@ -510,7 +531,7 @@ function SelectDropdown({
         onClick={onToggle}
         aria-expanded={isOpen}
         aria-label={`${normalizeAriaText(label)}: ${normalizeAriaText(selectedLabel)}`}
-        className="flex items-center gap-1 text-white/85 hover:text-white transition-colors whitespace-nowrap"
+        className="flex items-center gap-1 whitespace-nowrap text-white/85 transition-colors hover:text-white"
       >
         {selectedFlagUrl ? (
           <img
@@ -551,10 +572,13 @@ function SelectDropdown({
               type="button"
               role="option"
               aria-selected={value === option.value}
-              onClick={() => { onChange(option.value); onToggle(); }}
+              onClick={() => {
+                onChange(option.value);
+                onToggle();
+              }}
               className={cn(
-                "flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-ink hover:bg-brand-50 hover:text-brand-700 transition-colors",
-                value === option.value && "bg-brand-50 text-brand-700 font-semibold",
+                "flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-ink transition-colors hover:bg-brand-50 hover:text-brand-700",
+                value === option.value && "bg-brand-50 font-semibold text-brand-700",
               )}
             >
               {showFlags && getCountryFlagUrl(option.value) ? (
@@ -671,7 +695,7 @@ function CurrencyDropdown({
         onClick={onToggle}
         aria-expanded={isOpen}
         aria-label={`${normalizeAriaText(ariaLabel)}: ${normalizeAriaText(selected.value)}`}
-        className="flex items-center gap-1 text-white/85 hover:text-white transition-colors whitespace-nowrap"
+        className="flex items-center gap-1 whitespace-nowrap text-white/85 transition-colors hover:text-white"
       >
         <span className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-white/40 text-[11px] font-semibold leading-none">
           {selected.symbol}
@@ -697,7 +721,7 @@ function CurrencyDropdown({
         <div
           role="listbox"
           aria-label={normalizeAriaText(ariaLabel)}
-          className="absolute left-0 top-[calc(100%+8px)] z-50 min-w-[8rem] overflow-hidden rounded-lg bg-white border border-border-soft shadow-(--shadow-pop) py-1"
+          className="absolute left-0 top-[calc(100%+8px)] z-50 min-w-[8rem] overflow-hidden rounded-lg border border-border-soft bg-white py-1 shadow-(--shadow-pop)"
         >
           {CURRENCY_OPTIONS.map((option) => (
             <button
@@ -705,10 +729,13 @@ function CurrencyDropdown({
               type="button"
               role="option"
               aria-selected={value === option.value}
-              onClick={() => { onChange(option.value); onToggle(); }}
+              onClick={() => {
+                onChange(option.value);
+                onToggle();
+              }}
               className={cn(
-                "flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-ink hover:bg-brand-50 hover:text-brand-700 transition-colors",
-                value === option.value && "bg-brand-50 text-brand-700 font-semibold",
+                "flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-ink transition-colors hover:bg-brand-50 hover:text-brand-700",
+                value === option.value && "bg-brand-50 font-semibold text-brand-700",
               )}
             >
               <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-surface-muted text-[12px] font-semibold">
@@ -735,7 +762,7 @@ function MobileCurrencySelect({
   const selected = CURRENCY_OPTIONS.find((option) => option.value === value) ?? CURRENCY_OPTIONS[0];
 
   return (
-    <label className="flex flex-col gap-0.5 min-w-0">
+    <label className="flex min-w-0 flex-col gap-0.5">
       <span className="text-[10px] font-medium uppercase tracking-wide text-ink-soft">{label}</span>
       <span className="relative">
         <span className="pointer-events-none absolute left-2 top-1/2 inline-flex h-4 w-4 -translate-y-1/2 items-center justify-center rounded-full bg-surface-muted text-[11px] font-semibold leading-none text-ink-soft">
@@ -762,7 +789,7 @@ function DropdownMenu({
   items,
   t,
 }: {
-  items: { labelKey: string; href: string }[];
+  items: NavLink[];
   t: (key: string) => string;
 }) {
   return (
@@ -771,10 +798,10 @@ function DropdownMenu({
       className="invisible absolute left-1/2 top-full z-50 mt-1 min-w-56 -translate-x-1/2 translate-y-1 rounded-lg border border-border-soft bg-white opacity-0 shadow-(--shadow-pop) transition-all duration-150 group-hover/nav:visible group-hover/nav:translate-y-0 group-hover/nav:opacity-100"
     >
       <ul className="py-2">
-        {items.map((m) => (
-          <li key={m.labelKey}>
+        {items.map((item) => (
+          <li key={item.label ?? item.labelKey ?? item.href}>
             <Link
-              href={m.href}
+              href={item.href}
               role="menuitem"
               className="flex items-center gap-2 px-4 py-2.5 text-[14px] font-medium text-ink hover:bg-brand-50 hover:text-brand-700"
             >
@@ -792,7 +819,7 @@ function DropdownMenu({
               >
                 <polyline points="9 6 15 12 9 18" />
               </svg>
-              {t(m.labelKey)}
+              {resolveLabel(item, t)}
             </Link>
           </li>
         ))}

@@ -11,7 +11,7 @@ import { authClient, type ApiAuthUser } from "@/lib/authClient";
 import { useAuthStore } from "@/state/authStore";
 
 type Mode = "signin" | "register";
-type AuthRole = "customer" | "partner";
+type AuthRole = "customer" | "partner" | "agent";
 
 type Props = {
   initialMode?: Mode;
@@ -48,7 +48,7 @@ export default function AuthForm({
 
   const hintCopy = useMemo(() => {
     if (mode === "register") {
-      return "Create your account once and choose whether it should behave as a customer or partner profile.";
+      return "Create your account once and choose whether it should behave as a customer, partner, or agent profile.";
     }
 
     return "Sign in with your email and password. We will route you based on the role stored on your account.";
@@ -172,7 +172,9 @@ export default function AuthForm({
             <p className="mt-1 text-[12px] text-ink-muted">
               {role === "partner"
                 ? "Partner accounts unlock the protected dashboard after authentication."
-                : "Customer accounts continue into the travel booking experience."}
+                : role === "agent"
+                  ? "Agent accounts use the same protected dashboard and taxi listing tools."
+                  : "Customer accounts continue into the travel booking experience."}
             </p>
           </div>
 
@@ -190,6 +192,13 @@ export default function AuthForm({
               checked={role === "partner"}
               onChange={() => setRole("partner")}
               label="Partner"
+            />
+            <Radio
+              id="role-agent"
+              name="auth-role"
+              checked={role === "agent"}
+              onChange={() => setRole("agent")}
+              label="Agent"
             />
           </div>
         </div>

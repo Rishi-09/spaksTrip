@@ -10,7 +10,7 @@ import {
 
 const router = Router();
 
-router.use(authMiddleware, roleMiddleware("partner"));
+router.use(authMiddleware, roleMiddleware("partner", "agent"));
 
 router.get("/resources", listResources);
 router.post("/resources", createResource);

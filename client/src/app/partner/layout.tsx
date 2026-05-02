@@ -1,6 +1,7 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import PartnerShell from "@/components/partner/PartnerShell";
+import { isBusinessUser } from "@/lib/authRoles";
 import type { ApiAuthUser } from "@/lib/authClient";
 import { toDisplayName } from "@/lib/displayName";
 
@@ -40,7 +41,7 @@ async function getPartnerUser(): Promise<MeResponse["user"]> {
   }
 
   const payload = (await response.json()) as MeResponse;
-  if (payload.user.role !== "partner") {
+  if (!isBusinessUser(payload.user.role)) {
     redirect("/");
   }
 
