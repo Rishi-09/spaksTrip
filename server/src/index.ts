@@ -5,7 +5,6 @@ import { env } from "./config/env";
 import { connectDb } from "./config/db";
 import authRoutes from "./routes/auth.routes";
 import partnerRoutes from "./routes/partner.routes";
-import flightRoutes from "./routes/flight.routes";
 import { errorHandler } from "./middleware/error";
 
 async function main(): Promise<void> {
@@ -28,7 +27,6 @@ async function main(): Promise<void> {
 
   app.use("/api/auth", authRoutes);
   app.use("/api/partner", partnerRoutes);
-  app.use("/api/flights", flightRoutes);
 
   app.use(errorHandler);
 
