@@ -7,7 +7,7 @@ import BackToTop from "@/components/landing/BackToTop";
 import AirportTransferSearch from "@/components/transport/AirportTransferSearch";
 import OutstationSearch from "@/components/transport/OutstationSearch";
 import SightseeingSearch from "@/components/transport/SightseeingSearch";
-import { SIGHTSEEING_CITIES } from "@/lib/mock/taxi";
+import InventoryUnavailable from "@/components/shared/InventoryUnavailable";
 
 type Tab = "airport" | "outstation" | "sightseeing";
 
@@ -81,31 +81,16 @@ export default function TaxiPackagePage() {
       </div>
 
       <main className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
-        {/* Popular sightseeing destinations */}
+        {/* Sightseeing coverage */}
         <section className="mb-14">
-          <h2 className="text-[22px] font-extrabold text-ink mb-1">Popular Destinations</h2>
-          <p className="text-[14px] text-ink-muted mb-6">Discover top-rated guided tours across India</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {SIGHTSEEING_CITIES.slice(0, 8).map((city) => (
-              <a
-                key={city.code}
-                href={`/taxi-package/sightseeing/results?city=${city.code}&date=${new Date().toISOString().slice(0, 10)}&pax=2`}
-                className="group relative overflow-hidden rounded-xl aspect-[4/3] block"
-              >
-                <img
-                  src={city.image}
-                  alt={city.name}
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent" />
-                <div className="absolute bottom-0 left-0 p-3">
-                  <p className="text-[13px] font-bold text-white">{city.name}</p>
-                  <p className="text-[11px] text-white/75">{city.state}</p>
-                </div>
-              </a>
-            ))}
-          </div>
+          <h2 className="text-[22px] font-extrabold text-ink mb-1">Sightseeing Coverage</h2>
+          <p className="text-[14px] text-ink-muted mb-6">Sightseeing inventory will appear here once live providers are connected.</p>
+          <InventoryUnavailable
+            title="Sightseeing inventory is currently unavailable"
+            subtitle="We removed the generated destination cards so this section only comes back with live package coverage."
+            href="/taxi-package"
+            ctaLabel="Explore Taxi Services"
+          />
         </section>
 
         {/* Why choose SpaksTrip */}

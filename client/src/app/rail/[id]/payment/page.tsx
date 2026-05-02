@@ -158,7 +158,7 @@ function PaymentInner() {
             </div>
 
             <div className="rounded-lg bg-warn-50 text-warn-600 text-[11px] font-medium px-3 py-2.5">
-              Demo only — no real ticket will be issued.
+              Ticket issuance is not enabled in this environment yet.
             </div>
 
             <Button variant="accent" size="lg" fullWidth onClick={onPay} loading={processing}>

@@ -41,7 +41,7 @@ export default function TrainChangeRequestPage() {
           <h1 className="text-[30px] font-black">Train Change Request</h1>
           <p className="mt-2 max-w-2xl text-[14px] text-white/72">
             The train flow now exposes support actions directly from the header.
-            Use this page to start a lightweight mock change request against confirmed tickets.
+            Use this page to start a lightweight change request against confirmed tickets.
           </p>
         </div>
       </section>
@@ -111,7 +111,7 @@ export default function TrainChangeRequestPage() {
 
             {submitted ? (
               <div className="mt-4 rounded-xl border border-success-200 bg-success-50 px-4 py-3 text-[13px] text-success-700">
-                Mock change request submitted. This now follows the header train flow, while the underlying booking data still comes from the rail engine.
+                Change request submitted. This now follows the header train flow while reusing your saved booking details.
               </div>
             ) : null}
 

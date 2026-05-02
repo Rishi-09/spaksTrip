@@ -67,13 +67,13 @@ export default function BusPage() {
           <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6">
             <div className="max-w-2xl">
               <span className="inline-flex rounded-full bg-white/10 px-3 py-1 text-[12px] font-semibold text-white/80">
-                Bus booking with mock backend
+                Bus booking service
               </span>
               <h1 className="mt-4 text-[38px] font-black leading-tight text-white">
                 Search intercity buses with a TBO-ready frontend flow
               </h1>
               <p className="mt-3 max-w-xl text-[15px] text-white/75">
-                Pick your route, compare operators, open the seat map, and complete a full mock booking without changing the UI contract later.
+                Search routes, review operators, and continue once live bus inventory is connected.
               </p>
             </div>
             <div className="mt-8">
@@ -102,8 +102,8 @@ export default function BusPage() {
           {!searched ? (
             <div className="rounded-2xl border border-border-soft bg-white">
               <EmptyState
-                title="Search buses to see live mock inventory"
-                subtitle="Results will load from the new `/api/bus/search` route backed by the abstracted bus service."
+                title="Search buses when live inventory is available"
+                subtitle="This flow is ready for a real provider connection and no longer falls back to generated bus results."
               />
             </div>
           ) : null}
@@ -126,7 +126,7 @@ export default function BusPage() {
             <div className="rounded-2xl border border-border-soft bg-white">
               <EmptyState
                 title="No buses found"
-                subtitle="Try a different city pair or another date. The mock dataset only includes selected intercity routes."
+                subtitle="Try another route or date, or check back after live bus inventory is connected."
               />
             </div>
           ) : null}

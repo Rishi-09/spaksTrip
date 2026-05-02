@@ -8,6 +8,7 @@ import CabResultCard from "@/components/transport/CabResultCard";
 import Chip from "@/components/ui/Chip";
 import { searchCabs, type CabOffer, type CabType } from "@/services/cabs";
 import Skeleton from "@/components/ui/Skeleton";
+import InventoryUnavailable from "@/components/shared/InventoryUnavailable";
 
 export default function CabResultsPage() {
   return (
@@ -37,13 +38,35 @@ function CabResultsInner() {
   const to = sp.get("to") ?? "";
   const date = sp.get("date") ?? "";
 
+  return (
+    <CabResultsContent
+      key={`${from}-${to}-${date}`}
+      from={from}
+      to={to}
+      date={date}
+      searchParams={sp.toString()}
+    />
+  );
+}
+
+function CabResultsContent({
+  from,
+  to,
+  date,
+  searchParams,
+}: {
+  from: string;
+  to: string;
+  date: string;
+  searchParams: string;
+}) {
+
   const [cabs, setCabs] = useState<CabOffer[]>([]);
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState<CabType | "All">("All");
 
   useEffect(() => {
     if (!from || !to || !date) return;
-    setLoading(true);
     searchCabs({ from, to, date }).then((results) => {
       setCabs(results);
       setLoading(false);
@@ -82,12 +105,15 @@ function CabResultsInner() {
           {!loading && (
             <div className="flex flex-col gap-3" aria-live="polite">
               {displayed.length === 0 ? (
-                <div className="rounded-xl bg-white border border-border-soft p-12 text-center">
-                  <p className="text-[15px] font-semibold text-ink">No cabs available for this filter</p>
-                </div>
+                <InventoryUnavailable
+                  title="Cab inventory is currently unavailable"
+                  subtitle="This cab flow no longer uses generated vehicles. Connect a live supplier to restore results."
+                  href="/cabs"
+                  ctaLabel="Back to Cab Search"
+                />
               ) : (
                 displayed.map((cab) => (
-                  <CabResultCard key={cab.id} cab={cab} searchParams={sp.toString()} />
+                  <CabResultCard key={cab.id} cab={cab} searchParams={searchParams} />
                 ))
               )}
             </div>

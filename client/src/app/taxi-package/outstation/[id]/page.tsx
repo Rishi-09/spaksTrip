@@ -93,7 +93,7 @@ function Inner() {
 
     setPaying(true);
     await sleep(1400);
-    const ref = `OS${Date.now().toString().slice(-8)}`;
+    const ref = `OS-${date.replaceAll("-", "").slice(-6)}-${id.replace(/[^a-z0-9]/gi, "").slice(0, 4).toUpperCase()}`;
     confirmOutstation(ref);
     router.push(`/taxi-package/outstation/${encodeURIComponent(id)}/confirmation`);
   }
@@ -103,7 +103,7 @@ function Inner() {
     <div className="min-h-screen flex flex-col bg-surface-muted">
       <Header />
       <main className="flex-1 flex items-center justify-center">
-        <p className="text-ink-muted">Cab offer not found.</p>
+        <p className="text-ink-muted">Outstation cab booking is currently unavailable.</p>
       </main>
       <Footer />
     </div>

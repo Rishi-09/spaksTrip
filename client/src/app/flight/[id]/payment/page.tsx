@@ -222,7 +222,7 @@ function PaymentInner() {
                   <line x1="12" y1="17" x2="12.01" y2="17" />
                 </svg>
                 <span>
-                  This is a demo environment — no real payment will be processed.
+                  Payment processing is not enabled in this environment yet.
                 </span>
               </div>
             </div>

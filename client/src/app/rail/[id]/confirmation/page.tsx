@@ -13,7 +13,7 @@ import { useTrainBookingStore } from "@/state/trainBookingStore";
 const GENDER_LABEL: Record<string, string> = { M: "Male", F: "Female", T: "Other" };
 const BERTH_LABEL: Record<string, string> = { LB: "Lower Berth", MB: "Middle Berth", UB: "Upper Berth", SL: "Side Lower", SU: "Side Upper", NP: "No Preference" };
 
-// Mock seat assignment
+// Temporary seat assignment placeholder until live coach data is connected.
 function seatLabel(idx: number, cls: string): string {
   if (cls === "CC" || cls === "EC") return `S${Math.floor(idx / 5) + 1}/${idx + 1}`;
   const berths = ["LB","MB","UB","SL","SU"];

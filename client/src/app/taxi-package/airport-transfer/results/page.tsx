@@ -7,9 +7,9 @@ import Footer from "@/components/landing/Footer";
 import AirportTransferCard from "@/components/transport/AirportTransferCard";
 import Chip from "@/components/ui/Chip";
 import Skeleton from "@/components/ui/Skeleton";
-import EmptyState from "@/components/ui/EmptyState";
 import { searchAirportTransfers, searchAirportOptions } from "@/services/taxi";
 import type { AirportTransferOffer, TransferType } from "@/lib/mock/taxi";
+import InventoryUnavailable from "@/components/shared/InventoryUnavailable";
 
 export default function AirportTransferResultsPage() {
   return (
@@ -52,16 +52,49 @@ function Inner() {
   const pax = parseInt(sp.get("pax") ?? "1", 10);
   const address = sp.get("address") ?? "";
 
+  return (
+    <AirportTransferResultsContent
+      key={`${airport}-${direction}-${date}-${time}-${flightNo}-${pax}-${address}`}
+      airport={airport}
+      direction={direction}
+      date={date}
+      time={time}
+      flightNo={flightNo}
+      pax={pax}
+      address={address}
+      searchQs={sp.toString()}
+    />
+  );
+}
+
+function AirportTransferResultsContent({
+  airport,
+  direction,
+  date,
+  time,
+  flightNo,
+  pax,
+  address,
+  searchQs,
+}: {
+  airport: string;
+  direction: "pickup" | "dropoff";
+  date: string;
+  time: string;
+  flightNo: string;
+  pax: number;
+  address: string;
+  searchQs: string;
+}) {
+
   const [offers, setOffers] = useState<AirportTransferOffer[]>([]);
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState<TransferType | "all">("all");
   const [sortBy, setSortBy] = useState<SortBy>("price");
 
-  const searchQs = sp.toString();
   const airportInfo = searchAirportOptions(airport)[0];
 
   useEffect(() => {
-    setLoading(true);
     searchAirportTransfers({ airport, direction, date, time, flightNo, pax, address, luggage: 0 }).then((res) => {
       setOffers(res);
       setLoading(false);
@@ -120,14 +153,11 @@ function Inner() {
           <div className="flex flex-col gap-3" aria-live="polite">
             {displayed.length === 0 ? (
               <div className="rounded-xl bg-white border border-border-soft">
-                <EmptyState
-                  title="No transfers found"
-                  subtitle="Try a different vehicle type filter."
-                  cta={
-                    <button type="button" onClick={() => setTypeFilter("all")} className="rounded-lg bg-brand-600 px-5 py-2 text-[13px] font-semibold text-white hover:bg-brand-700 transition-colors">
-                      Show all types
-                    </button>
-                  }
+                <InventoryUnavailable
+                  title="Airport transfer inventory is currently unavailable"
+                  subtitle="This flow no longer shows generated transfer offers. Connect a live provider to restore results."
+                  href="/taxi-package"
+                  ctaLabel="Back to Taxi Services"
                 />
               </div>
             ) : (

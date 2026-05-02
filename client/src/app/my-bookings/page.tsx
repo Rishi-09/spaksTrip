@@ -17,7 +17,7 @@ export default async function MyBookingsPage() {
           <div>
             <h1 className="text-[32px] font-black text-ink">My Bus Bookings</h1>
             <p className="mt-1 text-[14px] text-ink-muted">
-              Stored from the mock booking API so the frontend contract stays stable.
+              Confirmed bus bookings will appear here once live bus booking is available.
             </p>
           </div>
           <Link

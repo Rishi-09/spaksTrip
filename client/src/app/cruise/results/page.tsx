@@ -6,9 +6,10 @@ import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import CruiseResultCard from "@/components/cruise/CruiseResultCard";
 import Chip from "@/components/ui/Chip";
-import { generateCruises, type CruiseOffer } from "@/lib/mock/cruises";
+import type { CruiseOffer } from "@/lib/mock/cruises";
 import { sleep } from "@/services/delay";
 import Skeleton from "@/components/ui/Skeleton";
+import InventoryUnavailable from "@/components/shared/InventoryUnavailable";
 
 export default function CruiseResultsPage() {
   return (
@@ -45,14 +46,37 @@ function CruiseResultsInner() {
   const month = sp.get("month") ?? "any";
   const nightsParam = sp.get("nights") ?? "any";
 
+  return (
+    <CruiseResultsContent
+      key={`${port}-${month}-${nightsParam}`}
+      port={port}
+      month={month}
+      nightsParam={nightsParam}
+    />
+  );
+}
+
+function CruiseResultsContent({
+  port,
+  month,
+  nightsParam,
+}: {
+  port: string;
+  month: string;
+  nightsParam: string;
+}) {
+
   const [cruises, setCruises] = useState<CruiseOffer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [nightFilter, setNightFilter] = useState("all");
+  const [nightFilter, setNightFilter] = useState(
+    nightsParam && nightsParam !== "any" ? nightsParam : "all",
+  );
 
   useEffect(() => {
-    setLoading(true);
     sleep(700).then(() => {
-      setCruises(generateCruises(port, month));
+      void port;
+      void month;
+      setCruises([]);
       setLoading(false);
     });
   }, [port, month]);
@@ -61,11 +85,6 @@ function CruiseResultsInner() {
     const nightsNum = nightFilter !== "all" ? parseInt(nightFilter) : null;
     return nightsNum ? cruises.filter((c) => c.nights === nightsNum) : cruises;
   }, [cruises, nightFilter]);
-
-  // Apply initial nights filter from URL
-  useEffect(() => {
-    if (nightsParam && nightsParam !== "any") setNightFilter(nightsParam);
-  }, [nightsParam]);
 
   return (
     <div className="min-h-screen flex flex-col bg-surface-muted">
@@ -98,16 +117,12 @@ function CruiseResultsInner() {
           {!loading && (
             <div className="flex flex-col gap-3" aria-live="polite">
               {displayed.length === 0 ? (
-                <div className="rounded-xl bg-white border border-border-soft p-12 text-center">
-                  <p className="text-[15px] font-semibold text-ink">No cruises match this duration</p>
-                  <button
-                    type="button"
-                    onClick={() => setNightFilter("all")}
-                    className="mt-3 text-[13px] font-semibold text-brand-600 hover:underline"
-                  >
-                    Show all cruises
-                  </button>
-                </div>
+                <InventoryUnavailable
+                  title="Cruise inventory is currently unavailable"
+                  subtitle="Live cruise sailings have not been connected yet, so no generated itineraries are shown."
+                  href="/cruise"
+                  ctaLabel="Back to Cruise Search"
+                />
               ) : (
                 displayed.map((cruise) => (
                   <CruiseResultCard key={cruise.id} cruise={cruise} />

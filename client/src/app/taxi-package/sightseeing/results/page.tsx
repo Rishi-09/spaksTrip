@@ -7,9 +7,9 @@ import Footer from "@/components/landing/Footer";
 import SightseeingCard from "@/components/transport/SightseeingCard";
 import Chip from "@/components/ui/Chip";
 import Skeleton from "@/components/ui/Skeleton";
-import EmptyState from "@/components/ui/EmptyState";
 import { searchSightseeingPackages, searchSightseeingCityOptions } from "@/services/taxi";
 import type { SightseeingPackage, Theme, PackageDuration } from "@/lib/mock/taxi";
+import InventoryUnavailable from "@/components/shared/InventoryUnavailable";
 
 export default function SightseeingResultsPage() {
   return (
@@ -52,6 +52,29 @@ function Inner() {
   const date = sp.get("date") ?? new Date().toISOString().slice(0, 10);
   const pax = parseInt(sp.get("pax") ?? "2", 10);
   const themeParam = sp.get("themes");
+
+  return (
+    <SightseeingResultsContent
+      key={`${city}-${date}-${pax}-${themeParam ?? ""}`}
+      city={city}
+      date={date}
+      pax={pax}
+      themeParam={themeParam}
+    />
+  );
+}
+
+function SightseeingResultsContent({
+  city,
+  date,
+  pax,
+  themeParam,
+}: {
+  city: string;
+  date: string;
+  pax: number;
+  themeParam: string | null;
+}) {
   const initThemes: Theme[] = themeParam ? (themeParam.split(",") as Theme[]) : [];
 
   const [packages, setPackages] = useState<SightseeingPackage[]>([]);
@@ -63,7 +86,6 @@ function Inner() {
   const cityInfo = searchSightseeingCityOptions(city)[0];
 
   useEffect(() => {
-    setLoading(true);
     searchSightseeingPackages({ city, date, pax }).then((res) => {
       setPackages(res);
       setLoading(false);
@@ -121,18 +143,11 @@ function Inner() {
           <div className="flex flex-col gap-4" aria-live="polite">
             {displayed.length === 0 ? (
               <div className="rounded-xl bg-white border border-border-soft">
-                <EmptyState
-                  title="No tours match your filters"
-                  subtitle="Try clearing the theme or duration filter."
-                  cta={
-                    <button
-                      type="button"
-                      onClick={() => { setThemeFilter([]); setDurationFilter("all"); }}
-                      className="rounded-lg bg-brand-600 px-5 py-2 text-[13px] font-semibold text-white hover:bg-brand-700 transition-colors"
-                    >
-                      Clear filters
-                    </button>
-                  }
+                <InventoryUnavailable
+                  title="Sightseeing inventory is currently unavailable"
+                  subtitle="This flow no longer shows generated tour packages. Connect a live provider to restore results."
+                  href="/taxi-package"
+                  ctaLabel="Back to Taxi Services"
                 />
               </div>
             ) : (

@@ -9,9 +9,9 @@ import TrainSearchForm from "@/components/rail/TrainSearchForm";
 import TrainServiceNav from "@/components/rail/TrainServiceNav";
 import Chip from "@/components/ui/Chip";
 import Skeleton from "@/components/ui/Skeleton";
-import EmptyState from "@/components/ui/EmptyState";
 import { searchTrains } from "@/services/trains";
 import type { Train, TrainType, TrainClass, Quota } from "@/lib/mock/trains";
+import InventoryUnavailable from "@/components/shared/InventoryUnavailable";
 
 export default function RailResultsPage() {
   return (
@@ -187,14 +187,11 @@ function RailResultsContent({
           <div className="flex flex-col gap-3" aria-live="polite">
             {displayed.length === 0 ? (
               <div className="rounded-xl bg-white border border-border-soft">
-                <EmptyState
-                  title="No trains found"
-                  subtitle="Try changing the type filter or search for a different date."
-                  cta={
-                    <button type="button" onClick={() => setTypeFilter("all")} className="rounded-lg bg-brand-600 px-5 py-2 text-[13px] font-semibold text-white hover:bg-brand-700 transition-colors">
-                      Show all types
-                    </button>
-                  }
+                <InventoryUnavailable
+                  title="Train inventory is currently unavailable"
+                  subtitle="This rail flow no longer shows generated train availability. Connect a live rail source to restore results."
+                  href="/train"
+                  ctaLabel="Back to Train Search"
                 />
               </div>
             ) : (

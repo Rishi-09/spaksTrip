@@ -1,10 +1,4 @@
 import {
-  generateAirportTransfers,
-  getAirportTransferById,
-  generateOutstationOffers,
-  getOutstationOfferById,
-  generateSightseeingPackages,
-  getSightseeingPackageById,
   searchAirports,
   searchCities,
   searchSightseeingCities,
@@ -20,16 +14,15 @@ import type {
   SightseeingPackage,
   SightseeingCity,
 } from "@/lib/mock/taxi";
-import { sleep, jitter } from "./delay";
 
 export async function searchAirportTransfers(s: AirportTransferSearch): Promise<AirportTransferOffer[]> {
-  await sleep(jitter(700));
-  return generateAirportTransfers(s);
+  void s;
+  return [];
 }
 
 export async function getAirportTransfer(id: string): Promise<AirportTransferOffer | null> {
-  await sleep(jitter(300));
-  return getAirportTransferById(id);
+  void id;
+  return null;
 }
 
 export function searchAirportOptions(q: string): AirportCode[] {
@@ -37,13 +30,13 @@ export function searchAirportOptions(q: string): AirportCode[] {
 }
 
 export async function searchOutstationOffers(s: OutstationSearch): Promise<OutstationOffer[]> {
-  await sleep(jitter(700));
-  return generateOutstationOffers(s);
+  void s;
+  return [];
 }
 
 export async function getOutstationOffer(id: string): Promise<OutstationOffer | null> {
-  await sleep(jitter(300));
-  return getOutstationOfferById(id);
+  void id;
+  return null;
 }
 
 export function searchCityOptions(q: string): CityOption[] {
@@ -51,13 +44,13 @@ export function searchCityOptions(q: string): CityOption[] {
 }
 
 export async function searchSightseeingPackages(s: SightseeingSearch): Promise<SightseeingPackage[]> {
-  await sleep(jitter(700));
-  return generateSightseeingPackages(s);
+  void s;
+  return [];
 }
 
 export async function getSightseeingPackage(id: string): Promise<SightseeingPackage | null> {
-  await sleep(jitter(300));
-  return getSightseeingPackageById(id);
+  void id;
+  return null;
 }
 
 export function searchSightseeingCityOptions(q: string): SightseeingCity[] {

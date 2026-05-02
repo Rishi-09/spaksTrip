@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
   try {
     const layout = await getSeatLayout({ busId, travelDate });
     if (!layout) {
-      return error("Bus seat layout was not found.", 404);
+      return error("Bus seat maps are currently unavailable.", 503);
     }
     return NextResponse.json<ApiResponse<BusSeatLayoutResponse>>({ success: true, data: layout });
   } catch {

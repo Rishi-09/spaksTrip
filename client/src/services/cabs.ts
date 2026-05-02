@@ -1,5 +1,4 @@
-import { generateCabs, getCabById, type CabOffer, type CabType } from "@/lib/mock/cabs";
-import { jitter, sleep } from "./delay";
+import type { CabOffer, CabType } from "@/lib/mock/cabs";
 
 export type { CabOffer, CabType };
 
@@ -10,11 +9,11 @@ export type CabSearchInput = {
 };
 
 export async function searchCabs(input: CabSearchInput): Promise<CabOffer[]> {
-  await sleep(jitter(600));
-  return generateCabs(input.from, input.to, input.date);
+  void input;
+  return [];
 }
 
 export async function getCab(id: string): Promise<CabOffer | null> {
-  await sleep(jitter(250));
-  return getCabById(id);
+  void id;
+  return null;
 }

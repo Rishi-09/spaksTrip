@@ -54,13 +54,32 @@ function TrainDetailInner() {
   const highlightCls = (sp.get("cls") ?? "SL") as TrainClass;
   const quota = (sp.get("quota") ?? "GENERAL") as Quota;
 
+  return (
+    <TrainDetailContent
+      key={`${id}-${highlightCls}-${quota}`}
+      id={id}
+      highlightCls={highlightCls}
+      quota={quota}
+    />
+  );
+}
+
+function TrainDetailContent({
+  id,
+  highlightCls,
+  quota,
+}: {
+  id: string;
+  highlightCls: TrainClass;
+  quota: Quota;
+}) {
+
   const [train, setTrain] = useState<Train | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     if (!id) return;
-    setLoading(true);
     getTrain(id).then((t) => {
       if (t) setTrain(t);
       else setError(true);
@@ -83,7 +102,7 @@ function TrainDetailInner() {
     <div className="min-h-screen flex flex-col bg-surface-muted">
       <Header />
       <main className="flex-1 max-w-4xl mx-auto w-full p-6">
-        <ErrorState message="Train details not found." />
+        <ErrorState message="Train details are currently unavailable." />
       </main>
       <Footer />
     </div>

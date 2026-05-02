@@ -119,7 +119,7 @@ function Inner() {
     <div className="min-h-screen flex flex-col bg-surface-muted">
       <Header />
       <main className="flex-1 flex items-center justify-center">
-        <p className="text-ink-muted">Transfer offer not found.</p>
+        <p className="text-ink-muted">Airport transfer booking is currently unavailable.</p>
       </main>
       <Footer />
     </div>
