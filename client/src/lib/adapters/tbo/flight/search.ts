@@ -146,6 +146,7 @@ function mapResult(result: TboFlightResult): FlightOffer {
     ),
     refundable: result.IsRefundable,
     baggage: { cabin: baggageCabin, checkin: baggageCheckin },
+    isPassportRequired: result.IsPassportRequiredAtBook || result.IsPassportRequiredAtTicket,
   };
 }
 

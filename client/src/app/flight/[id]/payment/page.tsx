@@ -11,10 +11,29 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Radio from "@/components/ui/Radio";
 import { useBookingStore } from "@/state/bookingStore";
+import type { Traveler } from "@/state/bookingStore";
 import { useToast } from "@/components/ui/Toast";
-import { sleep } from "@/services/delay";
+import { bookFlight, issueFlight, type BookingPassenger } from "@/services/flights";
 
 type Method = "card" | "upi" | "netbanking" | "wallet";
+
+function travelerToPassenger(t: Traveler): BookingPassenger {
+  return {
+    type: t.type,
+    title: t.title,
+    firstName: t.firstName,
+    lastName: t.lastName,
+    gender: t.gender,
+    dob: t.dob ?? "2000-01-01",
+    addressLine1: t.addressLine1,
+    city: t.city,
+    nationality: t.nationality ?? "IN",
+    countryCode: "IN",
+    countryName: "India",
+    passport: t.passport,
+    passportExpiry: t.passportExpiry,
+  };
+}
 
 export default function FlightPaymentPage() {
   return (
@@ -41,7 +60,7 @@ function PaymentInner() {
   const router = useRouter();
   const sp = useSearchParams();
   const toast = useToast();
-  const { current, confirm } = useBookingStore();
+  const { current, confirm, storeBookingResult } = useBookingStore();
 
   const [method, setMethod] = useState<Method>("upi");
   const [cardNumber, setCardNumber] = useState("");
@@ -59,7 +78,7 @@ function PaymentInner() {
 
   if (!current) return null;
 
-  const validate = (): string | null => {
+  const validatePaymentForm = (): string | null => {
     if (method === "card") {
       if (cardNumber.replace(/\s/g, "").length < 14) return "Enter a valid card number";
       if (!cardName.trim()) return "Name on card is required";
@@ -71,17 +90,65 @@ function PaymentInner() {
   };
 
   const onPay = async () => {
-    const err = validate();
-    if (err) {
-      toast.push({ title: err, tone: "warn" });
+    const formErr = validatePaymentForm();
+    if (formErr) {
+      toast.push({ title: formErr, tone: "warn" });
       return;
     }
+
+    if (!current.fareBreakdown?.length) {
+      toast.push({ title: "Fare data missing", description: "Please go back to the review page.", tone: "danger" });
+      return;
+    }
+
     setProcessing(true);
-    await sleep(1400);
-    const ref = `SPX${Math.floor(Math.random() * 900000 + 100000)}`;
-    confirm(ref);
-    toast.push({ title: "Payment successful", description: `PNR ${ref}`, tone: "success" });
-    router.push(`/flight/${encodeURIComponent(current.offer.id)}/confirmation?${sp.toString()}`);
+    try {
+      const passengers = current.travelers.map(travelerToPassenger);
+
+      let pnr: string;
+      let bookingId: number;
+      let ticketNumbers: string[] = [];
+
+      if (current.isLCC !== false) {
+        // LCC path (also default if isLCC is undefined — safe fallback)
+        const result = await issueFlight({
+          isLCC: true,
+          resultIndex: current.offer.id,
+          traceId: current.quoteTraceId,
+          fareBreakdown: current.fareBreakdown,
+          passengers,
+          contactEmail: current.contact.email,
+          contactPhone: current.contact.phone,
+        });
+        pnr = result.pnr;
+        bookingId = result.bookingId;
+        ticketNumbers = result.ticketNumbers;
+      } else {
+        // Non-LCC: Book first, then Ticket
+        const booked = await bookFlight({
+          resultIndex: current.offer.id,
+          traceId: current.quoteTraceId,
+          fareBreakdown: current.fareBreakdown,
+          passengers,
+          contactEmail: current.contact.email,
+          contactPhone: current.contact.phone,
+        });
+        const issued = await issueFlight({ isLCC: false, bookingId: booked.bookingId });
+        pnr = issued.pnr || booked.pnr;
+        bookingId = issued.bookingId;
+        ticketNumbers = issued.ticketNumbers;
+      }
+
+      storeBookingResult({ bookingId, pnr, ticketNumbers });
+      confirm(pnr || `SPX${bookingId}`);
+      toast.push({ title: "Booking confirmed", description: `PNR: ${pnr}`, tone: "success" });
+      router.push(`/flight/${encodeURIComponent(current.offer.id)}/confirmation?${sp.toString()}`);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Booking failed";
+      toast.push({ title: "Payment failed", description: msg, tone: "danger" });
+    } finally {
+      setProcessing(false);
+    }
   };
 
   const METHODS: Array<{ v: Method; label: string; icon: React.ReactNode }> = [
@@ -101,7 +168,7 @@ function PaymentInner() {
             <div className="flex flex-col gap-4">
               <ItinerarySummary offer={current.offer} compact />
 
-              <section className="rounded-xl bg-white border border-border-soft p-0 shadow-[var(--shadow-xs)] overflow-hidden">
+              <section className="rounded-xl bg-white border border-border-soft p-0 shadow-(--shadow-xs) overflow-hidden">
                 <div className="px-5 py-4 border-b border-border-soft">
                   <h2 className="text-[16px] font-bold text-ink">Payment</h2>
                   <p className="text-[12px] text-ink-muted">All payments are 256-bit SSL encrypted.</p>
@@ -116,7 +183,7 @@ function PaymentInner() {
                         className={
                           "flex items-center gap-3 rounded-md px-3 py-2.5 text-left text-[13px] font-semibold whitespace-nowrap transition-colors " +
                           (m.v === method
-                            ? "bg-white text-brand-700 shadow-[var(--shadow-xs)]"
+                            ? "bg-white text-brand-700 shadow-(--shadow-xs)"
                             : "text-ink-soft hover:bg-white/60")
                         }
                       >
@@ -214,17 +281,6 @@ function PaymentInner() {
                   </div>
                 </div>
               </section>
-
-              <div className="rounded-xl bg-warn-50 text-warn-600 text-[12px] font-medium px-4 py-3 flex items-start gap-2">
-                <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden className="mt-0.5 shrink-0">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                  <line x1="12" y1="9" x2="12" y2="13" />
-                  <line x1="12" y1="17" x2="12.01" y2="17" />
-                </svg>
-                <span>
-                  Payment processing is not enabled in this environment yet.
-                </span>
-              </div>
             </div>
 
             <aside className="flex flex-col gap-4">

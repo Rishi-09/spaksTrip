@@ -42,6 +42,7 @@ export type FlightOffer = {
   fareFamilies: FareFamily[];
   refundable: boolean;
   baggage: { cabin: number; checkin: number };
+  isPassportRequired?: boolean;
 };
 
 const AIRCRAFT = ["A320neo", "A321", "B737-800", "B737 MAX", "A350-900", "B777-300ER", "A380", "ATR-72"];

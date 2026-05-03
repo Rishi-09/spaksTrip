@@ -16,7 +16,10 @@ export type Traveler = {
   lastName: string;
   gender: Gender;
   dob: string | null;       // YYYY-MM-DD
+  addressLine1: string;     // required by TBO rule 5
+  city: string;             // required by TBO rule 5
   passport?: string;
+  passportExpiry?: string;  // YYYY-MM-DD
   nationality?: string;
   meal?: string;
   seat?: string;
@@ -26,6 +29,18 @@ export type ContactInfo = {
   email: string;
   phone: string;
   countryCode: string;
+};
+
+// Mirrors TboFareBreakdown — kept in PascalCase so it passes straight through to the API.
+export type FareBreakdownItem = {
+  PassengerType: number;    // 1=ADT, 2=CHD, 3=INF
+  PassengerCount: number;
+  BaseFare: number;
+  Tax: number;
+  YQTax: number;
+  Currency: string;
+  AdditionalTxnFeeOfrd?: number;
+  AdditionalTxnFeePub?: number;
 };
 
 export type FlightBooking = {
@@ -42,6 +57,14 @@ export type FlightBooking = {
   status: "CART" | "TRAVELER" | "PAYMENT" | "CONFIRMED";
   createdAt: string;
   confirmedAt?: string;
+  // Set after FareQuote on the review page
+  quoteTraceId?: string;
+  isLCC?: boolean;
+  fareBreakdown?: FareBreakdownItem[];
+  // Set after real Book/Ticket API calls
+  bookingId?: number;
+  pnr?: string;
+  ticketNumbers?: string[];
   bookingReference?: string;
 };
 
@@ -56,6 +79,8 @@ type Actions = {
   setContact: (c: ContactInfo) => void;
   setAddOns: (a: Partial<FlightBooking["addOns"]>) => void;
   advanceStatus: (s: FlightBooking["status"]) => void;
+  storeFareQuote: (d: { traceId: string; isLCC: boolean; fareBreakdown: FareBreakdownItem[] }) => void;
+  storeBookingResult: (r: { bookingId: number; pnr: string; ticketNumbers: string[] }) => void;
   confirm: (ref: string) => void;
   clearCurrent: () => void;
 };
@@ -110,6 +135,18 @@ export const useBookingStore = create<State & Actions>()(
         }),
       advanceStatus: (status) =>
         set((s) => (s.current ? { current: { ...s.current, status } } : s)),
+      storeFareQuote: ({ traceId, isLCC, fareBreakdown }) =>
+        set((s) =>
+          s.current
+            ? { current: { ...s.current, quoteTraceId: traceId, isLCC, fareBreakdown } }
+            : s,
+        ),
+      storeBookingResult: ({ bookingId, pnr, ticketNumbers }) =>
+        set((s) =>
+          s.current
+            ? { current: { ...s.current, bookingId, pnr, ticketNumbers } }
+            : s,
+        ),
       confirm: (ref) =>
         set((s) => {
           if (!s.current) return s;
