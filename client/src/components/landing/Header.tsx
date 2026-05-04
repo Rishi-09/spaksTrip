@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useTranslate } from "@tolgee/react";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 import Logo from "./Logo";
 import { cn } from "@/lib/cn";
 import RoleGate from "@/components/auth/RoleGate";
@@ -21,7 +22,7 @@ type NavItem = {
 // Some i18n labels can include zero-width characters that differ between SSR and client.
 // Strip them so `aria-label` props are identical across hydration.
 function normalizeAriaText(input: string) {
-  return input.replace(/[\u200B-\u200D\uFEFF]/g, "");
+  return input.replace(/[​-‍﻿]/g, "");
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -135,6 +136,138 @@ type CurrencyCode = (typeof CURRENCY_OPTIONS)[number]["value"];
 
 type OpenDropdown = "country" | "currency" | "language" | "user" | null;
 
+const headerVariants: Variants = {
+  hidden: { opacity: 0, y: -16 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
+};
+
+const dropdownVariants: Variants = {
+  hidden: { opacity: 0, y: 10, scale: 0.98 },
+  visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] } },
+  exit: { opacity: 0, y: 8, scale: 0.98, transition: { duration: 0.3, ease: "easeIn" } },
+};
+
+const megaItemVariants: Variants = {
+  hidden: { opacity: 0, y: 6 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.025, duration: 0.2, ease: "easeOut" },
+  }),
+};
+
+function NavIcon({ labelKey, className }: { labelKey: string; className?: string }) {
+  const common = {
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.8,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+    "aria-hidden": true,
+    className,
+  };
+  switch (labelKey) {
+    case "nav.flight":
+      return (
+        <svg {...common}>
+          <path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" />
+        </svg>
+      );
+    case "nav.hotel":
+      return (
+        <svg {...common}>
+          <path d="M4 21V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16" />
+          <path d="M4 21h16" />
+          <path d="M9 8h2M13 8h2M9 12h2M13 12h2M9 16h2M13 16h2" />
+        </svg>
+      );
+    case "nav.train":
+      return (
+        <svg {...common}>
+          <rect x="5" y="3" width="14" height="14" rx="2" />
+          <path d="M5 10h14" />
+          <circle cx="9" cy="13.5" r="1" />
+          <circle cx="15" cy="13.5" r="1" />
+          <path d="M7 21l2-3M17 21l-2-3" />
+        </svg>
+      );
+    case "nav.holiday_packages":
+      return (
+        <svg {...common}>
+          <rect x="3" y="7" width="18" height="13" rx="2" />
+          <path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
+          <path d="M3 13h18" />
+        </svg>
+      );
+    case "nav.accommodation":
+      return (
+        <svg {...common}>
+          <path d="M3 18v-5a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v5" />
+          <path d="M3 18h18" />
+          <path d="M7 10V8a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2" />
+        </svg>
+      );
+    case "nav.transport":
+      return (
+        <svg {...common}>
+          <path d="M5 17h14" />
+          <path d="M5 17l1.5-6a2 2 0 0 1 2-1.5h7a2 2 0 0 1 2 1.5L19 17" />
+          <circle cx="7.5" cy="17.5" r="1.5" />
+          <circle cx="16.5" cy="17.5" r="1.5" />
+        </svg>
+      );
+    case "nav.cruise":
+      return (
+        <svg {...common}>
+          <path d="M3 18c1.5 1 3 1 4.5 0s3-1 4.5 0 3 1 4.5 0 3-1 4.5 0" />
+          <path d="M5 14l1-4h12l1 4" />
+          <path d="M12 4v6" />
+        </svg>
+      );
+    case "nav.bus":
+      return (
+        <svg {...common}>
+          <rect x="5" y="4" width="14" height="13" rx="2" />
+          <path d="M5 11h14" />
+          <circle cx="8.5" cy="14.5" r="1" />
+          <circle cx="15.5" cy="14.5" r="1" />
+          <path d="M7 20v-3M17 20v-3" />
+        </svg>
+      );
+    case "nav.events":
+      return (
+        <svg {...common}>
+          <path d="M3 9l9-5 9 5v6a2 2 0 0 1-2 2h-2l-2 3-2-3H8l-2 3-2-3H3z" />
+        </svg>
+      );
+    case "nav.visa_consultancy":
+      return (
+        <svg {...common}>
+          <rect x="5" y="3" width="14" height="18" rx="2" />
+          <circle cx="12" cy="10" r="2.5" />
+          <path d="M9 16h6" />
+        </svg>
+      );
+    case "nav.insurance":
+      return (
+        <svg {...common}>
+          <path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" />
+          <path d="M9 12l2 2 4-4" />
+        </svg>
+      );
+    case "nav.offers":
+      return (
+        <svg {...common}>
+          <path d="M20 12l-8 8-9-9V3h8z" />
+          <circle cx="8" cy="8" r="1.3" />
+        </svg>
+      );
+    default:
+      return null;
+  }
+}
+
 export default function Header() {
   const { t } = useTranslate();
   const router = useRouter();
@@ -184,26 +317,44 @@ export default function Header() {
   const profileHref = user?.role === "partner" ? "/partner/dashboard" : "/my-trips";
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-white shadow-(--shadow-xs)">
+    <motion.header
+      initial="hidden"
+      animate="visible"
+      variants={headerVariants}
+      className="sticky top-0 z-40 w-full bg-white/90 backdrop-blur-md shadow-[0_1px_3px_rgba(15,23,42,0.04)]"
+    >
       <RoleGate />
 
-      <div className="bg-brand-900 text-white text-[13px]">
+      <div className="px-3 pt-3 sm:px-6">
         <div
           ref={utilityBarRef}
-          className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2.5 sm:px-6"
+          className="mx-auto flex max-w-7xl items-center justify-between rounded-full bg-gradient-to-r from-brand-900 via-[#0b1f4d] to-brand-900 px-5 py-2.5 text-[13px] text-white shadow-[0_6px_20px_-8px_rgba(11,31,77,0.45)] sm:px-7"
         >
           <a
             href="tel:+919220328072"
-            className="flex items-center gap-2 text-white/85 transition-colors hover:text-white"
+            aria-label="Call +91 922 032 8072"
+            className="group/phone inline-flex items-center text-white/85 transition-colors duration-200 hover:text-white"
           >
-            <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" aria-hidden>
-              <path d="M6.6 10.8c1.5 2.9 3.7 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.4.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.5 21 3 13.5 3 4.5c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1l-2.3 1.7z" />
-            </svg>
-            +91 922 032 8072
+            <span className="grid h-9 w-9 place-items-center rounded-full bg-white/10 ring-1 ring-white/15 transition-all duration-200 group-hover/phone:scale-105 group-hover/phone:bg-white/15">
+              <svg
+                viewBox="0 0 24 24"
+                width={17}
+                height={17}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.8}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92Z" />
+              </svg>
+            </span>
+            <span className="sr-only">+91 922 032 8072</span>
           </a>
 
-          <div className="hidden items-center gap-3 sm:flex">
-            <div className="flex items-center gap-3 border-r border-white/20 pr-3">
+          <div className="hidden items-center gap-4 sm:flex">
+            <div className="flex items-center gap-4 border-r border-white/15 pr-4">
               <SelectDropdown
                 label={t("header.country")}
                 options={COUNTRIES.map((c) => ({ value: c, label: c }))}
@@ -213,7 +364,7 @@ export default function Header() {
                 onToggle={() => toggleDropdown("country")}
                 showFlags
               />
-              <span className="text-white/30 select-none">|</span>
+              <span className="text-white/20 select-none">|</span>
               <CurrencyDropdown
                 value={selectedCurrency}
                 onChange={setSelectedCurrency}
@@ -221,7 +372,7 @@ export default function Header() {
                 onToggle={() => toggleDropdown("currency")}
                 ariaLabel={t("header.currency")}
               />
-              <span className="text-white/30 select-none">|</span>
+              <span className="text-white/20 select-none">|</span>
               <SelectDropdown
                 label={t("header.language")}
                 options={languageOptionLabels}
@@ -241,11 +392,13 @@ export default function Header() {
                 >
                   {t("header.my_trips")}
                 </Link>
-                <span className="text-white/50">·</span>
-                <button
+                <span className="text-white/40">·</span>
+                <motion.button
                   type="button"
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={() => toggleDropdown("user")}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 px-3 py-1.5 text-[12px] font-semibold text-white/90 transition-colors hover:bg-white/8 hover:text-white"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 text-[12px] font-semibold text-white/90 transition-colors duration-200 hover:bg-white/10 hover:text-white"
                 >
                   <span>{user.displayName}</span>
                   <svg
@@ -258,40 +411,49 @@ export default function Header() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     aria-hidden
-                    className={cn("transition-transform", openDropdown === "user" && "rotate-180")}
+                    className={cn("transition-transform duration-200", openDropdown === "user" && "rotate-180")}
                   >
                     <polyline points="6 9 12 15 18 9" />
                   </svg>
-                </button>
+                </motion.button>
 
-                {openDropdown === "user" ? (
-                  <div className="absolute right-0 top-[calc(100%+8px)] z-50 min-w-[13rem] rounded-xl border border-border-soft bg-white p-2 text-ink shadow-(--shadow-pop)">
-                    <div className="border-b border-border-soft px-3 py-2">
-                      <p className="text-[13px] font-semibold text-ink">{user.displayName}</p>
-                      <p className="text-[12px] text-ink-muted">{user.email}</p>
-                    </div>
-                    <div className="pt-2">
-                      <Link
-                        href={profileHref}
-                        className="block rounded-lg px-3 py-2 text-[13px] font-medium text-ink hover:bg-surface-muted"
-                        onClick={() => setOpenDropdown(null)}
-                      >
-                        {t("header.profile")}
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          setOpenDropdown(null);
-                          await logout();
-                          router.replace("/");
-                        }}
-                        className="block w-full rounded-lg px-3 py-2 text-left text-[13px] font-medium text-ink hover:bg-surface-muted"
-                      >
-                        {t("header.sign_out")}
-                      </button>
-                    </div>
-                  </div>
-                ) : null}
+                <AnimatePresence>
+                  {openDropdown === "user" ? (
+                    <motion.div
+                      key="user-dropdown"
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      variants={dropdownVariants}
+                      className="absolute right-0 top-[calc(100%+10px)] z-50 min-w-[14rem] overflow-hidden rounded-2xl border border-slate-200/70 bg-white/95 p-2 text-ink shadow-[0_20px_45px_-15px_rgba(15,23,42,0.25)] backdrop-blur-xl ring-1 ring-black/5"
+                    >
+                      <div className="border-b border-slate-100 px-3 py-2.5">
+                        <p className="text-[13px] font-semibold text-ink">{user.displayName}</p>
+                        <p className="text-[12px] text-ink-muted">{user.email}</p>
+                      </div>
+                      <div className="pt-2">
+                        <Link
+                          href={profileHref}
+                          className="block rounded-xl px-3 py-2 text-[13px] font-medium text-ink transition-colors hover:bg-blue-50 hover:text-brand-700"
+                          onClick={() => setOpenDropdown(null)}
+                        >
+                          {t("header.profile")}
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            setOpenDropdown(null);
+                            await logout();
+                            router.replace("/");
+                          }}
+                          className="block w-full rounded-xl px-3 py-2 text-left text-[13px] font-medium text-ink transition-colors hover:bg-blue-50 hover:text-brand-700"
+                        >
+                          {t("header.sign_out")}
+                        </button>
+                      </div>
+                    </motion.div>
+                  ) : null}
+                </AnimatePresence>
               </div>
             ) : (
               <LoginPill label="Login / Register" href="/auth" />
@@ -300,39 +462,57 @@ export default function Header() {
         </div>
       </div>
 
-      <div className="border-b border-border-soft">
-        {/* CHANGE: grid layout to keep Logo left and Navigation centered (hamburger stays right) */}
-        <div className="mx-auto st-header-main-nav-inner max-w-7xl px-4 py-3.5 sm:px-6">
+      <div className="border-b border-slate-100 bg-white">
+        <div className="mx-auto st-header-main-nav-inner max-w-7xl px-4 py-3 sm:px-6">
           <Logo />
-          {/* CHANGE: centered alignment within the grid */}
           <nav className="hidden lg:block justify-self-center">
-            <ul className="flex items-center gap-7 text-[14px] font-semibold text-ink">
+            <ul className="flex items-end gap-1 text-ink">
               {NAV_ITEMS.map((item) => (
-                <li key={item.labelKey} className="group/nav relative">
+                <motion.li
+                  key={item.labelKey}
+                  className="group/nav relative"
+                  initial="rest"
+                  animate="rest"
+                  whileHover="hover"
+                  whileTap={{ scale: 0.97 }}
+                  variants={{ rest: { scale: 1 }, hover: { scale: 1.04 } }}
+                  transition={{ type: "spring", stiffness: 400, damping: 26 }}
+                >
                   <Link
                     href={item.href}
-                    className="inline-flex items-center gap-1 py-2 transition-colors group-hover/nav:text-brand-700"
+                    className="relative flex min-w-[72px] flex-col items-center gap-1 rounded-2xl px-3 py-2 text-center transition-colors duration-200 hover:bg-blue-50/70 group-hover/nav:text-brand-700"
                   >
-                    {t(item.labelKey)}
-                    {item.menu ? (
-                      <svg
-                        viewBox="0 0 24 24"
-                        width={14}
-                        height={14}
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth={2.2}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden
-                        className="transition-transform group-hover/nav:rotate-180"
-                      >
-                        <polyline points="6 9 12 15 18 9" />
-                      </svg>
-                    ) : null}
+                    <span className="grid h-7 w-7 place-items-center rounded-xl text-brand-600 transition-transform duration-200 group-hover/nav:scale-110">
+                      <NavIcon labelKey={item.labelKey} className="h-[22px] w-[22px]" />
+                    </span>
+                    <span className="inline-flex items-center gap-0.5 text-[12.5px] font-semibold leading-tight tracking-tight text-ink/85 transition-colors group-hover/nav:text-brand-700">
+                      <span className="whitespace-nowrap">{t(item.labelKey)}</span>
+                      {item.menu ? (
+                        <svg
+                          viewBox="0 0 24 24"
+                          width={11}
+                          height={11}
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={2.4}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden
+                          className="transition-transform duration-200 group-hover/nav:rotate-180"
+                        >
+                          <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                      ) : null}
+                    </span>
+                    <motion.span
+                      aria-hidden
+                      className="pointer-events-none absolute inset-x-3 -bottom-[1px] h-[2px] origin-center rounded-full bg-gradient-to-r from-brand-500 to-brand-700"
+                      variants={{ rest: { scaleX: 0 }, hover: { scaleX: 1 } }}
+                      transition={{ duration: 0.28, ease: [0.35, 1, 0.36, 1] }}
+                    />
                   </Link>
-                  {item.menu ? <DropdownMenu items={item.menu} t={t} /> : null}
-                </li>
+                  {item.menu ? <MegaMenu parentKey={item.labelKey} items={item.menu} t={t} /> : null}
+                </motion.li>
               ))}
             </ul>
           </nav>
@@ -346,7 +526,7 @@ export default function Header() {
                 return next;
               });
             }}
-            className="lg:hidden grid h-10 w-10 place-items-center rounded-md text-ink hover:bg-surface-muted justify-self-end"
+            className="lg:hidden grid h-10 w-10 place-items-center rounded-xl text-ink transition-colors hover:bg-blue-50 justify-self-end"
           >
             <svg viewBox="0 0 24 24" width={20} height={20} fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" aria-hidden>
               {mobileOpen ? (
@@ -366,10 +546,16 @@ export default function Header() {
         </div>
       </div>
 
+      <AnimatePresence>
       {mobileOpen && (
-        <nav className="lg:hidden border-b border-border-soft bg-white max-h-[70vh] overflow-y-auto scrollbar-thin">
-          {/* Mobile selectors row */}
-          <div className="grid grid-cols-3 gap-2 border-b border-border-soft/60 px-4 py-3 sm:px-6">
+        <motion.nav
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+          className="lg:hidden border-b border-slate-100 bg-white max-h-[70vh] overflow-y-auto scrollbar-thin"
+        >
+          <div className="grid grid-cols-3 gap-2 border-b border-slate-100 px-4 py-3 sm:px-6">
             <MobileSelect label={t("header.country")} options={COUNTRIES.map((c) => ({ value: c, label: c }))} value={country} onChange={setCountry} showFlag />
             <MobileCurrencySelect value={selectedCurrency} onChange={setSelectedCurrency} label={t("header.currency")} />
             <MobileSelect label={t("header.language")} options={languageOptionLabels} value={language} onChange={setLanguage} showLanguageIcon />
@@ -381,14 +567,19 @@ export default function Header() {
               return (
                 <li key={item.labelKey}>
                   {item.menu ? (
-                    <div className="flex items-center justify-between border-b border-border-soft/60 px-4 py-3 sm:px-6">
-                      <span className="text-[14px] font-semibold text-ink">{itemLabel}</span>
+                    <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 sm:px-6">
+                      <span className="flex items-center gap-3 text-[14px] font-semibold text-ink">
+                        <span className="grid h-8 w-8 place-items-center rounded-xl bg-blue-50 text-brand-600">
+                          <NavIcon labelKey={item.labelKey} className="h-[18px] w-[18px]" />
+                        </span>
+                        {itemLabel}
+                      </span>
                       <button
                         type="button"
                         aria-label={t("header.toggle_section_menu", { label: itemLabel })}
                         aria-expanded={mobileExpanded === item.labelKey}
                         onClick={() => toggleMobileSection(item.labelKey)}
-                        className="grid h-8 w-8 place-items-center rounded-md text-ink hover:bg-surface-muted"
+                        className="grid h-8 w-8 place-items-center rounded-lg text-ink transition-colors hover:bg-blue-50"
                       >
                         <svg
                           viewBox="0 0 24 24"
@@ -401,7 +592,7 @@ export default function Header() {
                           strokeLinejoin="round"
                           aria-hidden
                           className={cn(
-                            "transition-transform",
+                            "transition-transform duration-200",
                             mobileExpanded === item.labelKey && "rotate-180",
                           )}
                         >
@@ -412,19 +603,22 @@ export default function Header() {
                   ) : (
                     <Link
                       href={item.href}
-                      className="block border-b border-border-soft/60 px-4 py-3 text-[14px] font-semibold text-ink hover:bg-surface-muted sm:px-6"
+                      className="flex items-center gap-3 border-b border-slate-100 px-4 py-3 text-[14px] font-semibold text-ink transition-colors hover:bg-blue-50 sm:px-6"
                       onClick={() => setMobileOpen(false)}
                     >
+                      <span className="grid h-8 w-8 place-items-center rounded-xl bg-blue-50 text-brand-600">
+                        <NavIcon labelKey={item.labelKey} className="h-[18px] w-[18px]" />
+                      </span>
                       {itemLabel}
                     </Link>
                   )}
                   {item.menu && mobileExpanded === item.labelKey ? (
-                    <ul className="bg-surface-muted">
+                    <ul className="bg-slate-50/70">
                       {item.menu.map((m) => (
                         <li key={m.labelKey}>
                           <Link
                             href={m.href}
-                            className="block px-8 py-2.5 text-[13px] text-ink-soft hover:text-brand-700 sm:px-10"
+                            className="block px-12 py-2.5 text-[13px] text-ink-soft transition-colors hover:text-brand-700 sm:px-14"
                             onClick={() => {
                               setMobileOpen(false);
                               setMobileExpanded(null);
@@ -441,12 +635,12 @@ export default function Header() {
             })}
           </ul>
 
-          <div className="border-t border-border-soft/60 px-4 py-4 sm:px-6">
+          <div className="border-t border-slate-100 px-4 py-4 sm:px-6">
             {user ? (
               <div className="flex flex-col gap-2">
                 <Link
                   href={profileHref}
-                  className="rounded-lg border border-border-soft px-4 py-3 text-[14px] font-semibold text-ink"
+                  className="rounded-xl border border-slate-200 px-4 py-3 text-[14px] font-semibold text-ink transition-colors hover:bg-blue-50"
                   onClick={() => setMobileOpen(false)}
                 >
                   Profile
@@ -458,7 +652,7 @@ export default function Header() {
                     await logout();
                     router.replace("/");
                   }}
-                  className="rounded-lg bg-brand-600 px-4 py-3 text-left text-[14px] font-semibold text-white"
+                  className="rounded-xl bg-gradient-to-r from-brand-600 to-brand-700 px-4 py-3 text-left text-[14px] font-semibold text-white shadow-sm transition-opacity hover:opacity-95"
                 >
                   Logout
                 </button>
@@ -466,16 +660,17 @@ export default function Header() {
             ) : (
               <Link
                 href="/auth"
-                className="block rounded-lg bg-brand-600 px-4 py-3 text-center text-[14px] font-semibold text-white"
+                className="block rounded-xl bg-gradient-to-r from-brand-600 to-brand-700 px-4 py-3 text-center text-[14px] font-semibold text-white shadow-sm transition-opacity hover:opacity-95"
                 onClick={() => setMobileOpen(false)}
               >
                 Login / Register
               </Link>
             )}
           </div>
-        </nav>
+        </motion.nav>
       )}
-    </header>
+      </AnimatePresence>
+    </motion.header>
   );
 }
 
@@ -510,7 +705,7 @@ function SelectDropdown({
         onClick={onToggle}
         aria-expanded={isOpen}
         aria-label={`${normalizeAriaText(label)}: ${normalizeAriaText(selectedLabel)}`}
-        className="flex items-center gap-1 text-white/85 hover:text-white transition-colors whitespace-nowrap"
+        className="flex items-center gap-1.5 text-white/85 transition-colors duration-200 hover:text-white whitespace-nowrap"
       >
         {selectedFlagUrl ? (
           <img
@@ -518,11 +713,11 @@ function SelectDropdown({
             alt={`${value} flag`}
             width={18}
             height={14}
-            className="h-3.5 w-[18px] rounded-[2px] object-cover"
+            className="h-3.5 w-[18px] rounded-[2px] object-cover ring-1 ring-white/10"
           />
         ) : null}
         {showLanguageIcon ? <LanguageIcon className="h-3.5 w-3.5 shrink-0" /> : null}
-        <span>{selectedLabel}</span>
+        <span className="font-medium">{selectedLabel}</span>
         <svg
           viewBox="0 0 24 24"
           width={11}
@@ -533,17 +728,22 @@ function SelectDropdown({
           strokeLinecap="round"
           strokeLinejoin="round"
           aria-hidden
-          className={cn("transition-transform duration-150", isOpen && "rotate-180")}
+          className={cn("transition-transform duration-200", isOpen && "rotate-180")}
         >
           <polyline points="6 9 12 15 18 9" />
         </svg>
       </button>
 
+      <AnimatePresence>
       {isOpen ? (
-        <div
+        <motion.div
           role="listbox"
           aria-label={normalizeAriaText(label)}
-          className="absolute left-0 top-[calc(100%+8px)] z-50 max-h-60 min-w-[10rem] overflow-y-auto rounded-lg border border-border-soft bg-white py-1 shadow-(--shadow-pop)"
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          variants={dropdownVariants}
+          className="absolute left-0 top-[calc(100%+10px)] z-50 max-h-60 min-w-[11rem] overflow-y-auto rounded-2xl border border-slate-200/70 bg-white/95 py-1.5 shadow-[0_20px_45px_-15px_rgba(15,23,42,0.25)] backdrop-blur-xl ring-1 ring-black/5"
         >
           {options.map((option) => (
             <button
@@ -553,8 +753,8 @@ function SelectDropdown({
               aria-selected={value === option.value}
               onClick={() => { onChange(option.value); onToggle(); }}
               className={cn(
-                "flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-ink hover:bg-brand-50 hover:text-brand-700 transition-colors",
-                value === option.value && "bg-brand-50 text-brand-700 font-semibold",
+                "flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-ink transition-colors hover:bg-blue-50 hover:text-brand-700",
+                value === option.value && "bg-blue-50 text-brand-700 font-semibold",
               )}
             >
               {showFlags && getCountryFlagUrl(option.value) ? (
@@ -563,15 +763,16 @@ function SelectDropdown({
                   alt={`${option.value} flag`}
                   width={18}
                   height={14}
-                  className="h-3.5 w-[18px] shrink-0 rounded-[2px] object-cover"
+                  className="h-3.5 w-[18px] shrink-0 rounded-[2px] object-cover ring-1 ring-slate-200"
                 />
               ) : null}
               {showLanguageIcon ? <LanguageIcon className="h-3.5 w-3.5 shrink-0 text-ink-soft" /> : null}
               <span>{normalizeAriaText(option.label)}</span>
             </button>
           ))}
-        </div>
+        </motion.div>
       ) : null}
+      </AnimatePresence>
     </div>
   );
 }
@@ -595,8 +796,8 @@ function MobileSelect({
   const hasLeadingIcon = Boolean(flagUrl || showLanguageIcon);
 
   return (
-    <label className="flex min-w-0 flex-col gap-0.5">
-      <span className="text-[10px] font-medium uppercase tracking-wide text-ink-soft">{normalizeAriaText(label)}</span>
+    <label className="flex min-w-0 flex-col gap-1">
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-ink-soft">{normalizeAriaText(label)}</span>
       <span className="relative">
         {flagUrl ? (
           <img
@@ -604,17 +805,17 @@ function MobileSelect({
             alt={`${value} flag`}
             width={18}
             height={14}
-            className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-[18px] -translate-y-1/2 rounded-[2px] object-cover"
+            className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-[18px] -translate-y-1/2 rounded-[2px] object-cover"
           />
         ) : null}
         {showLanguageIcon ? (
-          <LanguageIcon className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-soft" />
+          <LanguageIcon className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-soft" />
         ) : null}
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className={cn(
-            "w-full truncate rounded border border-border-soft bg-white px-2 py-1 text-[12px] text-ink focus:outline-none focus:ring-1 focus:ring-brand-500",
+            "w-full truncate rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-[12px] text-ink transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20",
             hasLeadingIcon && "pl-8",
           )}
         >
@@ -671,12 +872,12 @@ function CurrencyDropdown({
         onClick={onToggle}
         aria-expanded={isOpen}
         aria-label={`${normalizeAriaText(ariaLabel)}: ${normalizeAriaText(selected.value)}`}
-        className="flex items-center gap-1 text-white/85 hover:text-white transition-colors whitespace-nowrap"
+        className="flex items-center gap-1.5 text-white/85 transition-colors duration-200 hover:text-white whitespace-nowrap"
       >
         <span className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-white/40 text-[11px] font-semibold leading-none">
           {selected.symbol}
         </span>
-        <span>{selected.value}</span>
+        <span className="font-medium">{selected.value}</span>
         <svg
           viewBox="0 0 24 24"
           width={11}
@@ -687,17 +888,22 @@ function CurrencyDropdown({
           strokeLinecap="round"
           strokeLinejoin="round"
           aria-hidden
-          className={cn("transition-transform duration-150", isOpen && "rotate-180")}
+          className={cn("transition-transform duration-200", isOpen && "rotate-180")}
         >
           <polyline points="6 9 12 15 18 9" />
         </svg>
       </button>
 
+      <AnimatePresence>
       {isOpen && (
-        <div
+        <motion.div
           role="listbox"
           aria-label={normalizeAriaText(ariaLabel)}
-          className="absolute left-0 top-[calc(100%+8px)] z-50 min-w-[8rem] overflow-hidden rounded-lg bg-white border border-border-soft shadow-(--shadow-pop) py-1"
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          variants={dropdownVariants}
+          className="absolute left-0 top-[calc(100%+10px)] z-50 min-w-[8.5rem] overflow-hidden rounded-2xl border border-slate-200/70 bg-white/95 py-1.5 shadow-[0_20px_45px_-15px_rgba(15,23,42,0.25)] backdrop-blur-xl ring-1 ring-black/5"
         >
           {CURRENCY_OPTIONS.map((option) => (
             <button
@@ -707,18 +913,19 @@ function CurrencyDropdown({
               aria-selected={value === option.value}
               onClick={() => { onChange(option.value); onToggle(); }}
               className={cn(
-                "flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-ink hover:bg-brand-50 hover:text-brand-700 transition-colors",
-                value === option.value && "bg-brand-50 text-brand-700 font-semibold",
+                "flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-ink transition-colors hover:bg-blue-50 hover:text-brand-700",
+                value === option.value && "bg-blue-50 text-brand-700 font-semibold",
               )}
             >
-              <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-surface-muted text-[12px] font-semibold">
+              <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-50 text-[12px] font-semibold text-brand-700">
                 {option.symbol}
               </span>
               <span>{option.value}</span>
             </button>
           ))}
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -735,16 +942,16 @@ function MobileCurrencySelect({
   const selected = CURRENCY_OPTIONS.find((option) => option.value === value) ?? CURRENCY_OPTIONS[0];
 
   return (
-    <label className="flex flex-col gap-0.5 min-w-0">
-      <span className="text-[10px] font-medium uppercase tracking-wide text-ink-soft">{label}</span>
+    <label className="flex flex-col gap-1 min-w-0">
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-ink-soft">{label}</span>
       <span className="relative">
-        <span className="pointer-events-none absolute left-2 top-1/2 inline-flex h-4 w-4 -translate-y-1/2 items-center justify-center rounded-full bg-surface-muted text-[11px] font-semibold leading-none text-ink-soft">
+        <span className="pointer-events-none absolute left-2.5 top-1/2 inline-flex h-4 w-4 -translate-y-1/2 items-center justify-center rounded-full bg-blue-50 text-[11px] font-semibold leading-none text-brand-700">
           {selected.symbol}
         </span>
         <select
           value={value}
           onChange={(e) => onChange(e.target.value as CurrencyCode)}
-          className="w-full truncate rounded border border-border-soft bg-white py-1 pl-8 pr-2 text-[12px] text-ink focus:outline-none focus:ring-1 focus:ring-brand-500"
+          className="w-full truncate rounded-xl border border-slate-200 bg-white py-1.5 pl-8 pr-2 text-[12px] text-ink transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
           aria-label={label}
         >
           {CURRENCY_OPTIONS.map((option) => (
@@ -758,60 +965,149 @@ function MobileCurrencySelect({
   );
 }
 
-function DropdownMenu({
+const MEGA_DESCRIPTIONS: Record<string, string> = {
+  "nav.search": "Find trains by route & date",
+  "nav.tickets": "Manage your booked tickets",
+  "nav.change_request": "Modify journey details",
+  "nav.file_tdr_online": "Raise refund requests easily",
+  "nav.national_tour_packages": "Curated trips across India",
+  "nav.international_tour_packages": "Worldwide getaways & escapes",
+  "nav.homestay": "Live local, stay homely",
+  "nav.airbnb": "Unique stays worldwide",
+  "nav.villa": "Private luxury villas",
+  "nav.guest_house": "Cozy guest accommodations",
+  "nav.house_board": "Floating stays on water",
+  "nav.hostels": "Budget-friendly social stays",
+  "nav.resorts": "Premium resort experiences",
+  "nav.taxi_package": "Private taxi for tours",
+  "nav.cabs": "On-demand city cabs",
+  "nav.tour_bus": "Group tour bus rentals",
+  "nav.train": "Search & book trains",
+  "nav.cruise_for_andaman": "Andaman island cruises",
+  "nav.general_cruise": "All cruise destinations",
+  "nav.pr_visa": "Permanent residency support",
+  "nav.work_visa": "Work abroad legally",
+  "nav.investor_visa": "Investor migration paths",
+  "nav.study_visa": "Study abroad assistance",
+  "nav.visit_visa": "Short-term visit visas",
+  "nav.tourist_visa": "Tourist visa processing",
+};
+
+function MegaItemIcon({ labelKey, className }: { labelKey: string; className?: string }) {
+  const common = {
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.8,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+    "aria-hidden": true,
+    className,
+  };
+  return (
+    <svg {...common}>
+      <circle cx="12" cy="12" r="9" />
+      <polyline points="10 8 14 12 10 16" />
+    </svg>
+  );
+}
+
+function MegaMenu({
+  parentKey,
   items,
   t,
 }: {
+  parentKey: string;
   items: { labelKey: string; href: string }[];
   t: (key: string) => string;
 }) {
+  const cols = items.length >= 6 ? 3 : items.length >= 3 ? 2 : 1;
+  const widthClass = cols === 3 ? "w-[640px]" : cols === 2 ? "w-[460px]" : "w-[280px]";
+  const gridClass = cols === 3 ? "grid-cols-3" : cols === 2 ? "grid-cols-2" : "grid-cols-1";
+
   return (
-    <div
+    <motion.div
       role="menu"
-      className="invisible absolute left-1/2 top-full z-50 mt-1 min-w-56 -translate-x-1/2 translate-y-1 rounded-lg border border-border-soft bg-white opacity-0 shadow-(--shadow-pop) transition-all duration-150 group-hover/nav:visible group-hover/nav:translate-y-0 group-hover/nav:opacity-100"
+      variants={{
+        rest: { opacity: 0, y: 10, scale: 0.98, pointerEvents: "none" as const },
+        hover: { opacity: 1, y: 0, scale: 1, pointerEvents: "auto" as const },
+      }}
+      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+      className={cn(
+        "absolute left-1/2 top-full z-50 mt-2 -translate-x-1/2 overflow-hidden rounded-2xl border border-slate-200/70 bg-white/95 shadow-[0_24px_60px_-15px_rgba(15,23,42,0.28)] backdrop-blur-xl ring-1 ring-black/5",
+        widthClass,
+      )}
     >
-      <ul className="py-2">
-        {items.map((m) => (
-          <li key={m.labelKey}>
+      <div className="flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-blue-50/60 to-transparent px-5 py-3">
+        <div className="flex items-center gap-2.5">
+          <span className="grid h-8 w-8 place-items-center rounded-xl bg-white text-brand-600 shadow-sm ring-1 ring-slate-200/70">
+            <NavIcon labelKey={parentKey} className="h-[18px] w-[18px]" />
+          </span>
+          <div>
+            <p className="text-[13px] font-semibold text-ink">{t(parentKey)}</p>
+            <p className="text-[11px] text-ink-soft">Explore options</p>
+          </div>
+        </div>
+      </div>
+      <ul className={cn("grid gap-1 p-3", gridClass)}>
+        {items.map((m, i) => (
+          <motion.li
+            key={m.labelKey}
+            custom={i}
+            variants={megaItemVariants}
+            initial="hidden"
+            animate="visible"
+          >
             <Link
               href={m.href}
               role="menuitem"
-              className="flex items-center gap-2 px-4 py-2.5 text-[14px] font-medium text-ink hover:bg-brand-50 hover:text-brand-700"
+              className="group/mi flex items-start gap-3 rounded-xl p-3 transition-all duration-200 hover:bg-blue-50"
             >
+              <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-slate-50 text-brand-600 ring-1 ring-slate-100 transition-all duration-200 group-hover/mi:bg-white group-hover/mi:text-brand-700 group-hover/mi:ring-brand-200">
+                <MegaItemIcon labelKey={m.labelKey} className="h-[18px] w-[18px]" />
+              </span>
+              <span className="flex min-w-0 flex-col">
+                <span className="text-[13.5px] font-semibold text-ink transition-colors group-hover/mi:text-brand-700">
+                  {t(m.labelKey)}
+                </span>
+                <span className="mt-0.5 line-clamp-1 text-[11.5px] text-ink-soft">
+                  {MEGA_DESCRIPTIONS[m.labelKey] ?? "Discover more"}
+                </span>
+              </span>
               <svg
                 viewBox="0 0 24 24"
-                width={12}
-                height={12}
+                width={14}
+                height={14}
                 fill="none"
                 stroke="currentColor"
-                strokeWidth={2.4}
+                strokeWidth={2.2}
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 aria-hidden
-                className="text-brand-500"
+                className="ml-auto self-center text-slate-300 transition-all duration-200 group-hover/mi:translate-x-0.5 group-hover/mi:text-brand-600"
               >
                 <polyline points="9 6 15 12 9 18" />
               </svg>
-              {t(m.labelKey)}
             </Link>
-          </li>
+          </motion.li>
         ))}
       </ul>
-    </div>
+    </motion.div>
   );
 }
 
 function LoginPill({ label, href }: { label: string; href: string }) {
-  const cls = cn(
-    "inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-3 py-1.5 text-[12px] font-semibold text-white shadow-sm transition-opacity hover:opacity-90",
-  );
-
   return (
-    <Link href={href} className={cls}>
-      <svg viewBox="0 0 24 24" width={14} height={14} aria-hidden fill="currentColor">
-        <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-3.3 0-8 1.7-8 5v2h16v-2c0-3.3-4.7-5-8-5Z" />
-      </svg>
-      {label}
-    </Link>
+    <motion.div whileHover={{ scale: 1.04, y: -1 }} whileTap={{ scale: 0.97 }}>
+      <Link
+        href={href}
+        className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-brand-500 to-brand-700 px-4 py-1.5 text-[12px] font-semibold text-white shadow-[0_4px_14px_rgba(37,99,235,0.35)] transition-shadow duration-200 hover:shadow-[0_6px_18px_rgba(37,99,235,0.45)]"
+      >
+        <svg viewBox="0 0 24 24" width={14} height={14} aria-hidden fill="currentColor">
+          <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-3.3 0-8 1.7-8 5v2h16v-2c0-3.3-4.7-5-8-5Z" />
+        </svg>
+        {label}
+      </Link>
+    </motion.div>
   );
 }
