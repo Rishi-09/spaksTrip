@@ -144,7 +144,7 @@ const headerVariants: Variants = {
 const dropdownVariants: Variants = {
   hidden: { opacity: 0, y: 10, scale: 0.98 },
   visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] } },
-  exit: { opacity: 0, y: 8, scale: 0.98, transition: { duration: 0.15, ease: "easeIn" } },
+  exit: { opacity: 0, y: 8, scale: 0.98, transition: { duration: 0.3, ease: "easeIn" } },
 };
 
 const megaItemVariants: Variants = {
@@ -508,7 +508,7 @@ export default function Header() {
                       aria-hidden
                       className="pointer-events-none absolute inset-x-3 -bottom-[1px] h-[2px] origin-center rounded-full bg-gradient-to-r from-brand-500 to-brand-700"
                       variants={{ rest: { scaleX: 0 }, hover: { scaleX: 1 } }}
-                      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                      transition={{ duration: 0.28, ease: [0.35, 1, 0.36, 1] }}
                     />
                   </Link>
                   {item.menu ? <MegaMenu parentKey={item.labelKey} items={item.menu} t={t} /> : null}
@@ -552,7 +552,7 @@ export default function Header() {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
-          transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
           className="lg:hidden border-b border-slate-100 bg-white max-h-[70vh] overflow-y-auto scrollbar-thin"
         >
           <div className="grid grid-cols-3 gap-2 border-b border-slate-100 px-4 py-3 sm:px-6">
