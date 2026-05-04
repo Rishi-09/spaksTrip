@@ -27,17 +27,8 @@ function normalizeAriaText(input: string) {
 
 const NAV_ITEMS: NavItem[] = [
   { labelKey: "nav.flight", href: "/flight" },
-  { labelKey: "nav.hotel", href: "/hotel" },
-  {
-    labelKey: "nav.train",
-    href: "/train/search",
-    menu: [
-      { labelKey: "nav.search", href: "/train/search" },
-      { labelKey: "nav.tickets", href: "/train/tickets" },
-      { labelKey: "nav.change_request", href: "/train/change-request" },
-      { labelKey: "nav.file_tdr_online", href: "/train/file-tdr-online" },
-    ],
-  },
+  { labelKey: "Premium Hotel", href: "/hotel" },
+ 
   {
     labelKey: "nav.holiday_packages",
     href: "#",
@@ -75,6 +66,16 @@ const NAV_ITEMS: NavItem[] = [
     menu: [
       { labelKey: "nav.cruise_for_andaman", href: "#" },
       { labelKey: "nav.general_cruise", href: "/cruise" },
+    ],
+  },
+   {
+    labelKey: "nav.train",
+    href: "/train/search",
+    menu: [
+      { labelKey: "nav.search", href: "/train/search" },
+      { labelKey: "nav.tickets", href: "/train/tickets" },
+      { labelKey: "nav.change_request", href: "/train/change-request" },
+      { labelKey: "nav.file_tdr_online", href: "/train/file-tdr-online" },
     ],
   },
   { labelKey: "nav.bus", href: "/bus" },
@@ -174,7 +175,7 @@ function NavIcon({ labelKey, className }: { labelKey: string; className?: string
           <path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" />
         </svg>
       );
-    case "nav.hotel":
+    case "Premium Hotel":
       return (
         <svg {...common}>
           <path d="M4 21V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16" />
